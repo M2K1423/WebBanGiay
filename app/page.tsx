@@ -34,6 +34,9 @@ export default async function HomePage() {
             <a className="primary-action" href="#products">
               Xem san pham
             </a>
+            <a className="secondary-action" href="/login">
+              Dang nhap Firebase
+            </a>
             <a className="secondary-action" href="#about">
               Ve thuong hieu
             </a>
