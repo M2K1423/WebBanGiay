@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --bg: #f5f7fb;
   --bg-soft: #eef2f9;
@@ -10,10 +12,6 @@
   --accent-strong: #fb8500;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.08);
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* Keep minimal custom styles while using Tailwind utilities in components */
 html { scroll-behavior: smooth; }
