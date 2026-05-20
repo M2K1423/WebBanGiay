@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AuthClient from "./auth-client";
+import { AuthClient } from "@/features/auth";
 
 export const metadata: Metadata = {
   title: "Dang nhap | Solelane Shoes",
