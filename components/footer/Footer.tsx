@@ -1,101 +1,133 @@
 "use client";
 
 import Link from "next/link";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLocationDot,
+  FaPhone,
+  FaTiktok,
+  FaYoutube
+} from "react-icons/fa6";
+import { FaEnvelope } from "react-icons/fa";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-16 border-t border-slate-200 bg-slate-950 text-slate-200">
+    <footer className="mt-16 border-t border-white/10 bg-[#0d3a6b] text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xl font-semibold tracking-tight text-white">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-400 text-lg text-slate-950">
-              👟
+          <div className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-lg">
+              <span className="text-2xl italic">m</span>
             </span>
-            <span>Solelane</span>
+            <div>
+              <p className="text-xl italic">myshoes</p>
+              <p className="text-xs text-white/70">Real-deal sneakers</p>
+            </div>
           </div>
-          <p className="max-w-sm text-sm leading-6 text-slate-400">
-            Cung cấp các đôi giày chất lượng cao với thiết kế hiện đại và giá cả hợp lý.
+          <p className="max-w-sm text-sm leading-6 text-white/70">
+            Authentic kicks, quick delivery, easy returns.
           </p>
           <div className="flex gap-3">
-            <a href="https://facebook.com" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-sm text-white transition hover:bg-amber-400 hover:text-slate-950" aria-label="Facebook">
-              f
+            <a
+              href="https://facebook.com"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm text-white transition hover:bg-white/20"
+              aria-label="Facebook"
+            >
+              <FaFacebookF />
             </a>
-            <a href="https://instagram.com" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-sm text-white transition hover:bg-amber-400 hover:text-slate-950" aria-label="Instagram">
-              📷
+            <a
+              href="https://instagram.com"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm text-white transition hover:bg-white/20"
+              aria-label="Instagram"
+            >
+              <FaInstagram />
             </a>
-            <a href="https://twitter.com" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-sm text-white transition hover:bg-amber-400 hover:text-slate-950" aria-label="Twitter">
-              𝕏
+            <a
+              href="https://tiktok.com"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm text-white transition hover:bg-white/20"
+              aria-label="Tiktok"
+            >
+              <FaTiktok />
             </a>
-            <a href="https://youtube.com" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-sm text-white transition hover:bg-amber-400 hover:text-slate-950" aria-label="YouTube">
-              ▶️
+            <a
+              href="https://youtube.com"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm text-white transition hover:bg-white/20"
+              aria-label="YouTube"
+            >
+              <FaYoutube />
             </a>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-base font-semibold text-white">Liên Kết</h3>
-          <ul className="space-y-3 text-sm text-slate-400">
+          <h3 className="text-base font-semibold text-white">Shop by brand</h3>
+          <ul className="space-y-3 text-sm text-white/70">
             <li>
-              <Link href="/about" className="transition hover:text-amber-400">Về Chúng Tôi</Link>
+              <Link href="/brand/nike" className="transition hover:text-white">Nike shoes</Link>
             </li>
             <li>
-              <Link href="/products" className="transition hover:text-amber-400">Sản Phẩm</Link>
+              <Link href="/brand/adidas" className="transition hover:text-white">Adidas shoes</Link>
             </li>
             <li>
-              <Link href="/collections" className="transition hover:text-amber-400">Bộ Sưu Tập</Link>
+              <Link href="/brand/puma" className="transition hover:text-white">Puma shoes</Link>
             </li>
             <li>
-              <Link href="/blog" className="transition hover:text-amber-400">Blog</Link>
-            </li>
-          </ul>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-base font-semibold text-white">Hỗ Trợ Khách Hàng</h3>
-          <ul className="space-y-3 text-sm text-slate-400">
-            <li>
-              <Link href="/faq" className="transition hover:text-amber-400">Câu Hỏi Thường Gặp</Link>
-            </li>
-            <li>
-              <Link href="/shipping" className="transition hover:text-amber-400">Giao Hàng</Link>
-            </li>
-            <li>
-              <Link href="/returns" className="transition hover:text-amber-400">Trả Hàng</Link>
-            </li>
-            <li>
-              <Link href="/contact" className="transition hover:text-amber-400">Liên Hệ</Link>
+              <Link href="/sale" className="transition hover:text-white">Sale</Link>
             </li>
           </ul>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-base font-semibold text-white">Liên Hệ</h3>
-          <div className="space-y-3 text-sm leading-6 text-slate-400">
-            <p>
-              <strong>Địa chỉ:</strong> 123 Đường Giày, TP. Hồ Chí Minh
+          <h3 className="text-base font-semibold text-white">Need help?</h3>
+          <ul className="space-y-3 text-sm text-white/70">
+            <li>
+              <Link href="/faq" className="transition hover:text-white">FAQ</Link>
+            </li>
+            <li>
+              <Link href="/shipping" className="transition hover:text-white">Shipping</Link>
+            </li>
+            <li>
+              <Link href="/returns" className="transition hover:text-white">Returns</Link>
+            </li>
+            <li>
+              <Link href="/contact" className="transition hover:text-white">Contact</Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-base font-semibold text-white">Say hi</h3>
+          <div className="space-y-3 text-sm leading-6 text-white/70">
+            <p className="flex items-start gap-3">
+              <FaLocationDot className="mt-1 text-base text-white/80" />
+              <span>123 Shoe Street, Ho Chi Minh City</span>
             </p>
-            <p>
-              <strong>Email:</strong> support@solelane.com
+            <p className="flex items-start gap-3">
+              <FaEnvelope className="mt-1 text-base text-white/80" />
+              <span>support@myshoes.vn</span>
             </p>
-            <p>
-              <strong>Điện thoại:</strong> +84 (0) 123 456 789
+            <p className="flex items-start gap-3">
+              <FaPhone className="mt-1 text-base text-white/80" />
+              <span>+84 0909 123 456</span>
             </p>
-            <p>
-              <strong>Giờ làm việc:</strong> 8:00 - 18:00 (T2-T6)
+            <p className="flex items-start gap-3">
+              <FaPhone className="mt-1 text-base text-white/80" />
+              <span>Hotline 1900 1234</span>
             </p>
           </div>
         </div>
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 text-sm text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <p>&copy; {currentYear} Solelane. Bảo lưu mọi quyền.</p>
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 text-sm text-white/60 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+          <p>&copy; {currentYear} myshoes.vn. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
-            <Link href="/privacy" className="transition hover:text-amber-400">Chính sách bảo mật</Link>
-            <Link href="/terms" className="transition hover:text-amber-400">Điều khoản sử dụng</Link>
-            <Link href="/cookies" className="transition hover:text-amber-400">Chính sách Cookie</Link>
+            <Link href="/privacy" className="transition hover:text-white">Privacy policy</Link>
+            <Link href="/terms" className="transition hover:text-white">Terms of use</Link>
+            <Link href="/cookies" className="transition hover:text-white">Cookie policy</Link>
           </div>
         </div>
       </div>
