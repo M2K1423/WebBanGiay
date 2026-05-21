@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { User } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   FaBagShopping,
   FaBars,
@@ -15,9 +18,82 @@ import {
   FaUser
 } from "react-icons/fa6";
 import { SiAdidas, SiNike, SiPuma } from "react-icons/si";
+import { getFirebaseAuth } from "@/lib/firebase";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [signOutLoading, setSignOutLoading] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const auth = getFirebaseAuth();
+
+    if (!auth) {
+      return;
+    }
+
+    return onAuthStateChanged(auth, setUser);
+  }, []);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!accountMenuRef.current) {
+        return;
+      }
+
+      if (!accountMenuRef.current.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  const handleSignOut = useCallback(async () => {
+    const auth = getFirebaseAuth();
+
+    if (!auth) {
+      return;
+    }
+
+    setSignOutLoading(true);
+
+    try {
+      await signOut(auth);
+      router.push("/login");
+    } finally {
+      setSignOutLoading(false);
+    }
+  }, [router]);
+
+  const handleToggleAccountMenu = useCallback(() => {
+    setIsAccountMenuOpen((current) => !current);
+  }, []);
+
+  const handleLoginClick = useCallback(() => {
+    setIsAccountMenuOpen(false);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-[#0d3a6b] text-white shadow-lg shadow-slate-900/20">
@@ -48,17 +124,61 @@ export default function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-4">
-          <Link href="/login" className="flex items-center gap-2" aria-label="Login">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-lg">
-              <FaUser />
-            </span>
-            <span className="hidden text-sm font-semibold md:block">Account</span>
-          </Link>
-          <Link href="/cart" className="relative flex items-center gap-2" aria-label="Shopping Cart">
+          <div ref={accountMenuRef} className="relative">
+            {user ? (
+              <button
+                type="button"
+                onClick={handleToggleAccountMenu}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-lg transition-colors hover:bg-[#0a2747]"
+                aria-label="Mo menu tai khoan"
+                aria-expanded={isAccountMenuOpen}
+                aria-haspopup="menu"
+              >
+                <FaUser />
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-lg transition-colors hover:bg-[#0a2747]"
+                aria-label="Login"
+                onClick={handleLoginClick}
+              >
+                <FaUser />
+              </Link>
+            )}
+
+            {user && isAccountMenuOpen ? (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-3 w-64 overflow-hidden rounded-2xl border border-white/10 bg-white text-slate-900 shadow-2xl shadow-slate-950/30"
+              >
+                <div className="border-b border-slate-200 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Logged in</p>
+                  <p className="mt-1 break-words text-sm font-semibold">{user.email ?? "Firebase user"}</p>
+                </div>
+                <div className="p-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleSignOut();
+                      setIsAccountMenuOpen(false);
+                    }}
+                    disabled={signOutLoading}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                    role="menuitem"
+                  >
+                    <FaUser className="text-base" />
+                    {signOutLoading ? "Dang xuat..." : "Dang xuat"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <Link href="/cart" className="relative flex items-center" aria-label="Shopping Cart">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-lg">
               <FaBagShopping />
             </span>
-            <span className="hidden text-sm font-semibold md:block">Cart</span>
             <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[11px] font-bold text-white">
               0
             </span>

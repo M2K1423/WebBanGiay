@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import {
@@ -17,7 +17,7 @@ import {
   getFacebookProvider,
   getGithubProvider
 } from "@/lib/firebase";
-import { getFriendlyErrorMessage, type AuthMode } from "./utils";
+import { getFriendlyErrorMessage, syncUserProfile, type AuthMode } from "./utils";
 
 export function useAuthLogic() {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -29,6 +29,20 @@ export function useAuthLogic() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const syncedUserUidRef = useRef<string | null>(null);
+
+  const syncActiveUser = useCallback(async (activeUser: User | null) => {
+    if (!activeUser) {
+      return;
+    }
+
+    if (syncedUserUidRef.current === activeUser.uid) {
+      return;
+    }
+
+    await syncUserProfile(activeUser);
+    syncedUserUidRef.current = activeUser.uid;
+  }, []);
 
   // Initialize auth state listener
   useEffect(() => {
@@ -45,9 +59,12 @@ export function useAuthLogic() {
   // Redirect on successful login
   useEffect(() => {
     if (user) {
+      void syncActiveUser(user).catch((syncError) => {
+        console.error("Failed to sync authenticated user:", syncError);
+      });
       router.push("/");
     }
-  }, [user, router]);
+  }, [user, router, syncActiveUser]);
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -72,10 +89,12 @@ export function useAuthLogic() {
 
       try {
         if (mode === "register") {
-          await createUserWithEmailAndPassword(auth, email, password);
+          const credential = await createUserWithEmailAndPassword(auth, email, password);
+          await syncActiveUser(credential.user);
           setStatus("Dang ky thanh cong. Tai khoan da duoc luu trong Firebase Auth.");
         } else {
-          await signInWithEmailAndPassword(auth, email, password);
+          const credential = await signInWithEmailAndPassword(auth, email, password);
+          await syncActiveUser(credential.user);
           setStatus("Dang nhap thanh cong.");
         }
       } catch (submitError) {
@@ -108,7 +127,8 @@ export function useAuthLogic() {
               ? getFacebookProvider()
               : getGithubProvider();
 
-        await signInWithPopup(auth, provider);
+        const credential = await signInWithPopup(auth, provider);
+        await syncActiveUser(credential.user);
         setStatus(`Dang nhap bang ${providerName} thanh cong.`);
       } catch (socialError) {
         setError(getFriendlyErrorMessage(socialError));
