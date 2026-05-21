@@ -2,37 +2,19 @@ export type FeaturedProduct = {
   id: string;
   name: string;
   description: string;
+  brand: string;
+  productType: string;
   price: string;
+  oldPrice: string;
+  discount: string;
   category: string;
+  promotion: string;
+  rating: number;
+  reviewCount: number;
+  sold: number;
   colors: string[];
+  imageUrls: string[];
 };
-
-const fallbackProducts: FeaturedProduct[] = [
-  {
-    id: "runner-01",
-    name: "Velocity Runner",
-    description: "Giay chay bo nhe, dem am va phan hoi tot cho tap luyen hang ngay.",
-    price: "1.890.000đ",
-    category: "Running",
-    colors: ["White", "Grey"]
-  },
-  {
-    id: "street-02",
-    name: "Urban Street",
-    description: "Phom dep, de bang va de phoi voi ao thun, jeans hoac outfit toi gian.",
-    price: "1.450.000đ",
-    category: "Lifestyle",
-    colors: ["Black", "Cream"]
-  },
-  {
-    id: "court-03",
-    name: "Court Classic",
-    description: "Mau giay the thao co dien, de ben va ton dang trong moi bo trang phuc.",
-    price: "1.620.000đ",
-    category: "Court",
-    colors: ["Navy", "White"]
-  }
-];
 
 export async function getFeaturedProducts(): Promise<FeaturedProduct[]> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
@@ -48,6 +30,6 @@ export async function getFeaturedProducts(): Promise<FeaturedProduct[]> {
 
     return (await response.json()) as FeaturedProduct[];
   } catch {
-    return fallbackProducts;
+    return [];
   }
 }

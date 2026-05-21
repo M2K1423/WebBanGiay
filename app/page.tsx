@@ -8,6 +8,7 @@ import {
   FaShieldHeart,
   FaStar
 } from "react-icons/fa6";
+import { getFeaturedProducts } from "../lib/products";
 
 const trustBadges = [
   {
@@ -32,55 +33,6 @@ const trustBadges = [
   }
 ];
 
-const flashSale = [
-  {
-    name: "Nike Air Zoom Vomero 16 Womens - Black White",
-    price: "2.190.000d",
-    oldPrice: "4.410.000d",
-    discount: "-50%",
-    sold: 122
-  },
-  {
-    name: "Nike Air Zoom Pegasus 40 Mens - Blue",
-    price: "2.390.000d",
-    oldPrice: "3.965.000d",
-    discount: "-40%",
-    sold: 138
-  },
-  {
-    name: "Nike Air Zoom Pegasus 40 Mens - Black White",
-    price: "2.390.000d",
-    oldPrice: "3.965.000d",
-    discount: "-40%",
-    sold: 191
-  },
-  {
-    name: "Nike Free RN NN Mens - White",
-    price: "1.690.000d",
-    oldPrice: "3.050.000d",
-    discount: "-45%",
-    sold: 110
-  }
-];
-
-const newArrivals = [
-  {
-    name: "Nike Court Vision Low Mens - Blue",
-    price: "1.490.000d",
-    oldPrice: "2.500.000d"
-  },
-  {
-    name: "Nike Zoom Bella 6 Womens - Black White",
-    price: "1.690.000d",
-    oldPrice: "2.560.000d"
-  },
-  {
-    name: "Nike Renew In-Season TR 11 Womens - White",
-    price: "1.790.000d",
-    oldPrice: "2.810.000d"
-  }
-];
-
 const newsItems = [
   {
     title: "Find Your Perfect Size",
@@ -99,7 +51,14 @@ const newsItems = [
   }
 ];
 
-export default function HomePage() {
+function getProductImage(product: { imageUrls: string[] }) {
+  return product.imageUrls[0] ?? null;
+}
+
+export default async function HomePage() {
+  const featuredProducts = await getFeaturedProducts();
+  const flashSaleProducts = featuredProducts.filter((product) => product.productType === "Flash Sale").slice(0, 4);
+
   return (
     <main className="bg-[#f5f7fb]">
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -172,24 +131,31 @@ export default function HomePage() {
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {flashSale.map((item) => (
-            <article key={item.name} className="overflow-hidden rounded-3xl bg-white shadow-sm">
+          {flashSaleProducts.map((item) => (
+            <article key={item.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
               <div className="relative h-44 bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
+                {getProductImage(item) ? (
+                  <img alt={item.name} className="h-full w-full object-cover" src={getProductImage(item) ?? undefined} />
+                ) : null}
                 <span className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
                   {item.discount}
                 </span>
                 <span className="absolute bottom-4 left-4 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-[#1b1202]">
-                  Free socks
+                  {item.promotion}
                 </span>
               </div>
               <div className="p-4">
+                <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+                  <span>{item.brand}</span>
+                  <span>{item.category}</span>
+                </div>
                 <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{item.name}</h3>
                 <div className="mt-3 flex items-center gap-2">
                   <span className="text-base font-semibold text-rose-600">{item.price}</span>
                   <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
                 </div>
                 <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-                  <FaStar className="text-amber-400" /> 5.0 | {item.sold} sold
+                  <FaStar className="text-amber-400" /> {item.rating.toFixed(1)} | {item.sold} sold
                 </div>
               </div>
             </article>
@@ -200,25 +166,40 @@ export default function HomePage() {
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8" id="new-arrivals">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">New arrivals</p>
-            <h2 className="text-2xl font-semibold text-slate-900">Fresh arrivals</h2>
+            <h2 className="text-2xl font-semibold text-slate-900">Products Popular</h2>
           </div>
           <a className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b]" href="/products">
-            Browse arrivals
+            All products
             <FaChevronRight />
           </a>
         </div>
 
-        <div className="mt-6 grid gap-6 md:grid-cols-3">
-          {newArrivals.map((item) => (
-            <article key={item.name} className="overflow-hidden rounded-3xl bg-white shadow-sm">
-              <div className="h-44 bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]" />
+        <div className="mt-6 grid gap-6 md:grid-cols-4">
+          {featuredProducts.map((item) => (
+            <article key={item.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
+              <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
+                {getProductImage(item) ? (
+                  <img alt={item.name} className="h-full w-full object-cover" src={getProductImage(item) ?? undefined} />
+                ) : null}
+                <div className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+                  {item.discount}
+                </div>
+              </div>
               <div className="p-4">
+                <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+                  <span>{item.brand}</span>
+                  <span>{item.category}</span>
+                </div>
                 <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{item.name}</h3>
+                <p className="mt-2 line-clamp-2 text-xs text-slate-500">{item.description}</p>
                 <div className="mt-3 flex items-center gap-2">
                   <span className="text-base font-semibold text-[#0d3a6b]">{item.price}</span>
                   <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
                 </div>
+                <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                  <FaStar className="text-amber-400" /> {item.rating}.0 | {item.sold} sold
+                </div>
+                <p className="mt-2 text-xs font-medium text-emerald-600">{item.promotion}</p>
               </div>
             </article>
           ))}
