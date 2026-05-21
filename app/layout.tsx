@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body className={spaceGrotesk.variable}>
+      <body className={spaceGrotesk.className}>
         <Header />
         {children}
         <Footer />
