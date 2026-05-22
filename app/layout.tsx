@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { CartProvider } from "@/features/cart/CartContext";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -22,9 +23,11 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={spaceGrotesk.className}>
-        <Header />
-        {children}
-        <Footer />
+        <CartProvider>
+          <Header />
+          {children}
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );
