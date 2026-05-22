@@ -19,6 +19,7 @@ import {
 } from "react-icons/fa6";
 import { SiAdidas, SiNike, SiPuma } from "react-icons/si";
 import { getFirebaseAuth } from "@/lib/firebase";
+import { useCart } from "@/features/cart/CartContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,6 +28,7 @@ export default function Header() {
   const [signOutLoading, setSignOutLoading] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const { count } = useCart();
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -176,12 +178,14 @@ export default function Header() {
           </div>
 
           <Link href="/cart" className="relative flex items-center" aria-label="Shopping Cart">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-lg">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-lg transition-colors hover:bg-[#0a2747]">
               <FaBagShopping />
             </span>
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[11px] font-bold text-white">
-              0
-            </span>
+            {count > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[11px] font-bold text-white">
+                {count > 99 ? "99+" : count}
+              </span>
+            )}
           </Link>
           <button
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 text-white md:hidden"
