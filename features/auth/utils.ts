@@ -9,7 +9,7 @@ export function getFriendlyErrorMessage(error: unknown): string {
 
 export type AuthMode = "login" | "register";
 
-function getApiBaseUrl() {
+export function getApiBaseUrl() {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
 }
 

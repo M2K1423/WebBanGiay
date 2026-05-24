@@ -17,7 +17,7 @@ import {
   getFacebookProvider,
   getGithubProvider
 } from "@/lib/firebase";
-import { getFriendlyErrorMessage, syncUserProfile, type AuthMode } from "./utils";
+import { getFriendlyErrorMessage, syncUserProfile, type AuthMode, getApiBaseUrl } from "./utils";
 
 export function useAuthLogic() {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -59,10 +59,27 @@ export function useAuthLogic() {
   // Redirect on successful login
   useEffect(() => {
     if (user) {
-      void syncActiveUser(user).catch((syncError) => {
-        console.error("Failed to sync authenticated user:", syncError);
-      });
-      router.push("/");
+      void (async () => {
+        await syncActiveUser(user).catch((syncError) => {
+          console.error("Failed to sync authenticated user:", syncError);
+        });
+
+        // After syncing, check backend if the user is admin and redirect accordingly
+        try {
+          const res = await fetch(`${getApiBaseUrl()}/users/${user.uid}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.isAdmin) {
+              router.push("/admin");
+              return;
+            }
+          }
+        } catch (err) {
+          // ignore and fallthrough to home
+        }
+
+        router.push("/");
+      })();
     }
   }, [user, router, syncActiveUser]);
 
