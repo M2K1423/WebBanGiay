@@ -5,6 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaChevronRight, FaLocationDot, FaMoneyBillWave, FaShieldHalved } from "react-icons/fa6";
 import { useCart } from "@/features/cart/CartContext";
+import { onAuthStateChanged } from "firebase/auth";
+import { getApiBaseUrl } from "@/features/auth/utils";
+import { getFirebaseAuth } from "@/lib/firebase";
+
+type CheckoutUser = {
+  uid: string;
+};
 
 function formatPrice(price: number): string {
   return price.toLocaleString("vi-VN") + "đ";
@@ -15,6 +22,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customerId, setCustomerId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -33,6 +41,18 @@ export default function CheckoutPage() {
     }
   }, [items.length, mounted, router]);
 
+  useEffect(() => {
+    const auth = getFirebaseAuth();
+
+    if (!auth) {
+      return;
+    }
+
+    return onAuthStateChanged(auth, (user: CheckoutUser | null) => {
+      setCustomerId(user?.uid ?? null);
+    });
+  }, []);
+
   if (!mounted || items.length === 0) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -40,15 +60,46 @@ export default function CheckoutPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate API call to create order
-    setTimeout(() => {
+
+    const userId = customerId ?? (formData.email.trim() || `guest-${Date.now()}`);
+
+    const payload = {
+      items,
+      total,
+      status: "pending",
+      shippingAddress: {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address,
+        note: formData.note
+      },
+      paymentMethod: formData.paymentMethod
+    };
+
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/orders/user/${userId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error("Không tạo được đơn hàng");
+      }
+
       clearCart();
       router.push("/checkout/success");
-    }, 1500);
+    } catch {
+      alert("Không tạo được đơn hàng. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
