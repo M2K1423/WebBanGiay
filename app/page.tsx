@@ -8,6 +8,7 @@ import {
   FaShieldHeart,
   FaStar
 } from "react-icons/fa6";
+import Link from "next/link";
 import { getFeaturedProducts } from "../lib/products";
 
 const trustBadges = [
@@ -132,10 +133,10 @@ export default async function HomePage() {
 
         <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {flashSaleProducts.map((item) => (
-            <article key={item.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
+            <Link key={item.id} href={`/products/${item.id}`} className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
               <div className="relative h-44 bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
                 {getProductImage(item) ? (
-                  <img alt={item.name} className="h-full w-full object-cover" src={getProductImage(item) ?? undefined} />
+                  <img alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={getProductImage(item) ?? undefined} />
                 ) : null}
                 <span className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
                   {item.discount}
@@ -158,7 +159,7 @@ export default async function HomePage() {
                   <FaStar className="text-amber-400" /> {item.rating.toFixed(1)} | {item.sold} sold
                 </div>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       </section>
@@ -176,10 +177,10 @@ export default async function HomePage() {
 
         <div className="mt-6 grid gap-6 md:grid-cols-4">
           {featuredProducts.map((item) => (
-            <article key={item.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
+            <Link key={item.id} href={`/products/${item.id}`} className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
               <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
                 {getProductImage(item) ? (
-                  <img alt={item.name} className="h-full w-full object-cover" src={getProductImage(item) ?? undefined} />
+                  <img alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={getProductImage(item) ?? undefined} />
                 ) : null}
                 <div className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
                   {item.discount}
@@ -201,7 +202,7 @@ export default async function HomePage() {
                 </div>
                 <p className="mt-2 text-xs font-medium text-emerald-600">{item.promotion}</p>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       </section>

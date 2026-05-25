@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { FaPlus, FaPenToSquare, FaTrashCan } from "react-icons/fa6";
+import { getApiBaseUrl } from "@/features/auth/utils";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:3001/users")
+    fetch(`${getApiBaseUrl()}/users`)
       .then(res => res.json())
       .then(data => {
         setUsers(data);

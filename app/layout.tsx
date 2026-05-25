@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 import { CartProvider } from "@/features/cart/CartContext";
+import SiteChrome from "@/components/site-chrome/SiteChrome";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -24,9 +23,7 @@ export default function RootLayout({
     <html lang="vi">
       <body className={spaceGrotesk.className}>
         <CartProvider>
-          <Header />
-          {children}
-          <Footer />
+          <SiteChrome>{children}</SiteChrome>
         </CartProvider>
       </body>
     </html>
