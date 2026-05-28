@@ -11,6 +11,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const brandName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  if (slug.toLowerCase() === "sport") {
+    return {
+      title: "Giày Sport Shoes Đa Năng | myshoes.vn",
+      description: "Khám phá bộ sưu tập Sport Shoes đa năng cho running, training và court với thiết kế linh hoạt, bám sân tốt và thoải mái cả ngày."
+    };
+  }
+  if (slug.toLowerCase() === "pickleball") {
+    return {
+      title: "Giày Pickleball Chính Hãng | myshoes.vn",
+      description: "Khám phá bộ sưu tập giày Pickleball chính hãng mới nhất. Thiết kế ổn định, bám sân tốt và phù hợp thi đấu court."
+    };
+  }
   return {
     title: `Giày ${brandName} Chính Hãng | myshoes.vn`,
     description: `Mua giày ${brandName} chính hãng, giá tốt nhất thị trường tại myshoes.vn. Hàng chuẩn, giao nhanh, đổi trả dễ dàng.`
@@ -26,14 +38,16 @@ export default async function BrandPage({
 }) {
   const { slug } = await params;
   const { sort } = await searchParams;
-  
+
+  const isPickleball = slug.toLowerCase() === "pickleball";
+  const isSport = slug.toLowerCase() === "sport";
   const brandName = slug.charAt(0).toUpperCase() + slug.slice(1);
   let products = await getProductsByBrand(brandName);
 
   if (!products || products.length === 0) {
     // We don't want to 404 just because a brand has no products currently
     // but maybe check if it's a valid brand first
-    const validBrands = ["nike", "adidas", "puma", "salomon", "vans", "reebok", "crocs", "asics", "new-balance"];
+    const validBrands = ["nike", "adidas", "puma", "salomon", "vans", "reebok", "crocs", "asics", "new-balance", "pickleball", "sport"];
     if (!validBrands.includes(slug.toLowerCase())) {
       notFound();
     }
@@ -72,8 +86,26 @@ export default async function BrandPage({
               {brandName} Shoes
             </h1>
             <p className="text-lg text-white/80">
-              Khám phá bộ sưu tập giày {brandName} chính hãng mới nhất. Thiết kế đột phá, hiệu năng vượt trội.
+              {isSport
+                ? "Bộ sưu tập Sport Shoes đa năng cho chạy bộ, tập luyện và các hoạt động court. Nhẹ, bám tốt và tối ưu cho chuyển động hằng ngày."
+                : isPickleball
+                ? "Khám phá bộ sưu tập giày Pickleball chính hãng mới nhất. Thiết kế ổn định, bám sân tốt và sẵn sàng cho các pha đổi hướng nhanh."
+                : `Khám phá bộ sưu tập giày ${brandName} chính hãng mới nhất. Thiết kế đột phá, hiệu năng vượt trội.`}
             </p>
+            {isSport ? (
+              <div className="mt-6 flex flex-wrap gap-2 text-sm">
+                {[
+                  "Running",
+                  "Training",
+                  "Court",
+                  "Lightweight",
+                ].map((item) => (
+                  <span key={item} className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-white/90 backdrop-blur-sm">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -126,7 +158,11 @@ export default async function BrandPage({
           <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-24 text-center shadow-sm">
             <div className="text-6xl mb-4">👟</div>
             <h2 className="text-xl font-semibold text-slate-900">Thương hiệu này đang trống</h2>
-            <p className="mt-2 text-slate-500">Chúng tôi đang cập nhật thêm sản phẩm {brandName}.</p>
+            <p className="mt-2 text-slate-500">
+              {isPickleball
+                ? "Chúng tôi đang cập nhật thêm sản phẩm pickleball phù hợp."
+                : `Chúng tôi đang cập nhật thêm sản phẩm ${brandName}.`}
+            </p>
             <Link href="/products" className="mt-6 rounded-full bg-[#0d3a6b] px-6 py-2 text-sm font-semibold text-white">
               Xem các thương hiệu khác
             </Link>
