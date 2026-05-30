@@ -118,7 +118,7 @@ export default async function ProductsPage({
                       href={buildUrl("brand", brand === b ? "" : b)}
                       className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors ${
                         brand === b
-                          ? "bg-[#0d3a6b] text-white font-semibold"
+                          ? "bg-[#0d3a6b] !text-white font-semibold"
                           : "text-slate-600 hover:bg-slate-50"
                       }`}
                     >
@@ -138,7 +138,7 @@ export default async function ProductsPage({
                       href={buildUrl("category", category === c ? "" : c)}
                       className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors ${
                         category === c
-                          ? "bg-[#0d3a6b] text-white font-semibold"
+                          ? "bg-[#0d3a6b] !text-white font-semibold"
                           : "text-slate-600 hover:bg-slate-50"
                       }`}
                     >
@@ -182,7 +182,7 @@ export default async function ProductsPage({
                         href={buildUrl("sort", s.value)}
                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                           (sort ?? "") === s.value
-                            ? "bg-[#0d3a6b] text-white"
+                            ? "bg-[#0d3a6b] !text-white"
                             : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                         }`}
                       >
