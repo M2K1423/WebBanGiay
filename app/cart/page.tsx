@@ -52,7 +52,7 @@ export default function CartPage() {
 
       <div className="mx-auto max-w-7xl px-4 mt-8 sm:px-6 lg:px-8">
         <h1 className="text-2xl font-semibold text-slate-900 mb-6">
-          Giỏ hàng <span className="text-slate-500 text-lg font-normal">({count} sản phẩm)</span>
+          Giỏ hàng <span className="text-slate-500 text-lg font-normal tracking-normal">({count} sản phẩm)</span>
         </h1>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
