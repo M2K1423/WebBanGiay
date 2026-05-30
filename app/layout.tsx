@@ -5,7 +5,7 @@ import SiteChrome from "@/components/site-chrome/SiteChrome";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   variable: "--font-space-grotesk"
 });
 
