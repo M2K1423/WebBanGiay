@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { FaChevronRight, FaStar, FaShieldHeart, FaArrowsRotate, FaMedal } from "react-icons/fa6";
 import { getProductById, getProductImage, getProductsByCategory } from "@/lib/products";
 import AddToCart from "@/features/cart/AddToCart";
+import ProductGallery from "@/components/product/ProductGallery";
 
 export async function generateMetadata({
   params
@@ -39,7 +40,6 @@ export default async function ProductDetailPage({
 
   const relatedProducts = await getProductsByCategory(product.category);
   const filteredRelated = relatedProducts.filter(p => p.id !== product.id).slice(0, 4);
-  const img = getProductImage(product);
 
   return (
     <main className="min-h-screen bg-[#f5f7fb]">
@@ -61,35 +61,7 @@ export default async function ProductDetailPage({
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-2">
           {/* Image Gallery */}
-          <div className="space-y-4">
-            <div className="relative aspect-square overflow-hidden rounded-3xl bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff] shadow-sm">
-              {img ? (
-                <img
-                  src={img}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-6xl">👟</div>
-              )}
-              {product.discount && (
-                <span className="absolute left-6 top-6 rounded-full bg-rose-500 px-4 py-1.5 text-sm font-semibold text-white">
-                  {product.discount}
-                </span>
-              )}
-            </div>
-            
-            {/* Thumbnail Gallery */}
-            {product.imageUrls.length > 1 && (
-              <div className="grid grid-cols-4 gap-4">
-                {product.imageUrls.map((url, i) => (
-                  <div key={i} className="aspect-square cursor-pointer overflow-hidden rounded-2xl bg-[#f7f9ff] border-2 border-transparent hover:border-[#0d3a6b] transition-colors">
-                    <img src={url} alt={`${product.name} ${i+1}`} className="h-full w-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ProductGallery product={product} />
 
           {/* Product Info */}
           <div className="flex flex-col">
@@ -130,7 +102,7 @@ export default async function ProductDetailPage({
                 brand: product.brand,
                 price: product.price,
                 oldPrice: product.oldPrice,
-                image: img,
+                image: getProductImage(product),
                 colors: product.colors ?? [],
               }}
               sizes={SIZES}

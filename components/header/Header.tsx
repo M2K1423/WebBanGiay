@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { User } from "firebase/auth";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
@@ -26,8 +26,11 @@ export default function Header() {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [signOutLoading, setSignOutLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { count } = useCart();
 
   useEffect(() => {
@@ -72,6 +75,10 @@ export default function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    setSearchTerm(searchParams.get("q") ?? "");
+  }, [pathname, searchParams]);
+
   const handleSignOut = useCallback(async () => {
     const auth = getFirebaseAuth();
 
@@ -97,6 +104,19 @@ export default function Header() {
     setIsAccountMenuOpen(false);
   }, []);
 
+  const handleSearchSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const query = searchTerm.trim();
+
+    if (!query) {
+      router.push("/products");
+      return;
+    }
+
+    router.push(`/products?q=${encodeURIComponent(query)}`);
+  }, [router, searchTerm]);
+
   return (
     <header className="sticky top-0 z-50 bg-[#0d3a6b] text-white shadow-lg shadow-slate-900/20">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -110,19 +130,22 @@ export default function Header() {
         </Link>
 
         <div className="hidden min-w-0 flex-1 items-center md:flex md:max-w-xl">
-          <div className="flex w-full items-center rounded-full bg-white px-4 py-2 text-slate-900">
+          <form onSubmit={handleSearchSubmit} className="flex w-full items-center rounded-full bg-white px-4 py-2 text-slate-900">
             <input
               type="text"
               placeholder="Find your next pair..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
               className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
             />
             <button
+              type="submit"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-white transition-colors hover:bg-[#0a2747]"
               aria-label="Search"
             >
               <FaMagnifyingGlass />
             </button>
-          </div>
+          </form>
         </div>
 
         <div className="ml-auto flex items-center gap-4">
@@ -210,16 +233,11 @@ export default function Header() {
           <Link href="/brand/puma" className="flex items-center gap-2 text-white/90 hover:text-white">
             <SiPuma className="text-base text-red-400" /> Puma shoes
           </Link>
-          <Link href="/collections/pickleball" className="flex items-center gap-2 text-white/90 hover:text-white">
-            <FaTableTennisPaddleBall className="text-base" /> Pickleball
+          <Link href="/brand/pickleball" className="flex items-center gap-2 text-white/90 hover:text-white">
+            <FaTableTennisPaddleBall className="text-base" /> Pickleball Shoes
           </Link>
-          <Link href="/categories" className="flex items-center gap-2 text-white/90 hover:text-white">
-            <FaPersonRunning className="text-base" /> Sports
-            <FaChevronDown className="text-xs opacity-80" />
-          </Link>
-          <Link href="/accessories" className="flex items-center gap-2 text-white/90 hover:text-white">
-            <FaBagShopping className="text-base" /> Accessories
-            <FaChevronDown className="text-xs opacity-80" />
+          <Link href="/brand/sport" className="flex items-center gap-2 text-white/90 hover:text-white">
+            <FaPersonRunning className="text-base" /> Sport Shoes
           </Link>
           <Link href="/sale" className="flex items-center gap-2 text-white/90 hover:text-white">
             <FaBolt className="text-base" /> Sale
