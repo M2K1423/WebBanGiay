@@ -143,7 +143,7 @@ export default async function BrandPage({
                   href={buildUrl(s.value)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                     (sort ?? "") === s.value
-                      ? "bg-[#0d3a6b] text-white"
+                      ? "bg-[#0d3a6b] !text-white"
                       : "text-slate-600 hover:bg-slate-50"
                   }`}
                 >

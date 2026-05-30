@@ -239,6 +239,9 @@ export default function Header() {
           <Link href="/brand/sport" className="flex items-center gap-2 text-white/90 hover:text-white">
             <FaPersonRunning className="text-base" /> Sport Shoes
           </Link>
+          <Link href="/accessories" className="flex items-center gap-2 text-white/90 hover:text-white">
+            <FaBagShopping className="text-base" /> Accessories
+          </Link>
           <Link href="/sale" className="flex items-center gap-2 text-white/90 hover:text-white">
             <FaBolt className="text-base" /> Sale
           </Link>
