@@ -4,8 +4,8 @@ import { FaChevronRight, FaBolt, FaStar } from "react-icons/fa6";
 import { getSaleProducts, getProductImage } from "@/lib/products";
 
 export const metadata: Metadata = {
-  title: "Flash Sale - Siêu sale giày chính hãng | myshoes.vn",
-  description: "Săn sale giày Nike, Adidas cực sốc. Deal ngon mỗi ngày tại myshoes.vn"
+  title: "Flash Sale - Genuine Shoes Sale | myshoes.vn",
+  description: "Get hot deals on Nike and Adidas shoes. Special promotions daily at myshoes.vn"
 };
 
 export default async function SalePage({
@@ -59,7 +59,7 @@ export default async function SalePage({
                 FLASH SALE
               </h1>
               <p className="text-white/90 mt-1">
-                Giảm giá lên đến 50%. Mua ngay kẻo lỡ!
+                Save up to 50%. Shop now!
               </p>
             </div>
           </div>
@@ -70,7 +70,7 @@ export default async function SalePage({
       <div className="bg-white border-b border-slate-100 mb-8">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-            <Link href="/" className="hover:text-rose-600 transition-colors">Trang chủ</Link>
+            <Link href="/" className="hover:text-rose-600 transition-colors">Home</Link>
             <FaChevronRight className="text-[10px]" />
             <span className="text-rose-600 font-semibold">Flash Sale</span>
           </nav>
@@ -80,17 +80,17 @@ export default async function SalePage({
       <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-900">Sản phẩm đang sale</h2>
-            <p className="text-sm text-slate-500 mt-1">{products.length} sản phẩm</p>
+            <h2 className="text-2xl font-semibold text-slate-900">Sale Products</h2>
+            <p className="text-sm text-slate-500 mt-1">{products.length} {products.length === 1 ? "product" : "products"}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500 hidden sm:block">Sắp xếp:</span>
+            <span className="text-sm text-slate-500 hidden sm:block">Sort by:</span>
             <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm border border-slate-200">
               {[
-                { label: "Mới nhất", value: "" },
-                { label: "Giảm sâu nhất", value: "discount" },
-                { label: "Giá ↑", value: "price-asc" },
-                { label: "Giá ↓", value: "price-desc" },
+                { label: "Newest", value: "" },
+                { label: "Highest Discount", value: "discount" },
+                { label: "Price ↑", value: "price-asc" },
+                { label: "Price ↓", value: "price-desc" },
               ].map((s) => (
                 <Link
                   key={s.label}
@@ -111,10 +111,10 @@ export default async function SalePage({
         {products.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-24 text-center shadow-sm">
             <div className="text-6xl mb-4 text-slate-300"><FaBolt /></div>
-            <h2 className="text-xl font-semibold text-slate-900">Chưa có chương trình Sale</h2>
-            <p className="mt-2 text-slate-500">Vui lòng quay lại sau.</p>
+            <h2 className="text-xl font-semibold text-slate-900">No Sale Available</h2>
+            <p className="mt-2 text-slate-500">Please check back later.</p>
             <Link href="/products" className="mt-6 rounded-full bg-[#0d3a6b] px-6 py-2 text-sm font-semibold text-white">
-              Xem tất cả sản phẩm
+              View all products
             </Link>
           </div>
         ) : (
@@ -160,7 +160,7 @@ export default async function SalePage({
                         </div>
                         <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                           <FaStar className="text-amber-400" />
-                          {product.rating.toFixed(1)} · {product.sold} đã bán
+                          {product.rating.toFixed(1)} · {product.sold} sold
                         </div>
                       </div>
                     </div>

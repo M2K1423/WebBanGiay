@@ -3,9 +3,11 @@ import Link from "next/link";
 import { FaChevronRight, FaStar, FaFilter } from "react-icons/fa6";
 import { getAllProducts, getProductImage } from "@/lib/products";
 
+const PRODUCTS_PER_PAGE = 9;
+
 export const metadata: Metadata = {
-  title: "Tất cả sản phẩm | myshoes.vn",
-  description: "Khám phá bộ sưu tập giày Nike, Adidas, Puma chính hãng tại myshoes.vn"
+  title: "All Products | myshoes.vn",
+  description: "Explore our collection of authentic Nike, Adidas, Puma shoes at myshoes.vn"
 };
 
 const BRANDS = ["Nike", "Adidas", "Puma", "Salomon", "Under Armour", "New Balance", "Vans", "Reebok", "Asics"];
@@ -14,10 +16,10 @@ const CATEGORIES = ["Running", "Lifestyle", "Court", "Trail", "Training", "Casua
 export default async function ProductsPage({
   searchParams
 }: {
-  searchParams: Promise<{ brand?: string; category?: string; sort?: string; q?: string }>;
+  searchParams: Promise<{ brand?: string; category?: string; sort?: string; q?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const { brand, category, sort, q } = params;
+  const { brand, category, sort, q, page } = params;
 
   let products = await getAllProducts();
 
@@ -52,6 +54,14 @@ export default async function ProductsPage({
     products = [...products].sort((a, b) => b.sold - a.sold);
   }
 
+  const currentPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
+  const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * PRODUCTS_PER_PAGE;
+  const visibleProducts = products.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+  const startItem = products.length === 0 ? 0 : startIndex + 1;
+  const endItem = Math.min(startIndex + PRODUCTS_PER_PAGE, products.length);
+
   const buildUrl = (key: string, value: string) => {
     const p = new URLSearchParams();
     if (brand && key !== "brand") p.set("brand", brand);
@@ -60,6 +70,16 @@ export default async function ProductsPage({
     if (q && key !== "q") p.set("q", q);
     if (value) p.set(key, value);
     return `/products?${p.toString()}`;
+  };
+
+  const buildPageUrl = (pageNumber: number) => {
+    const p = new URLSearchParams();
+    if (brand) p.set("brand", brand);
+    if (category) p.set("category", category);
+    if (sort) p.set("sort", sort);
+    if (q) p.set("q", q);
+    if (pageNumber > 1) p.set("page", String(pageNumber));
+    return `/products${p.toString() ? `?${p.toString()}` : ""}`;
   };
 
   const clearFilter = () => {
@@ -73,9 +93,9 @@ export default async function ProductsPage({
       {/* Breadcrumb */}
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <nav className="flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Trang chủ</Link>
+          <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
           <FaChevronRight className="text-xs" />
-          <span className="text-slate-900 font-medium">Sản phẩm</span>
+          <span className="text-slate-900 font-medium">Products</span>
         </nav>
       </div>
 
@@ -88,8 +108,8 @@ export default async function ProductsPage({
               {(brand || category) && (
                 <div className="rounded-2xl bg-white p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-semibold text-slate-900">Bộ lọc đang dùng</p>
-                    <Link href={clearFilter()} className="text-xs text-rose-500 hover:underline">Xóa tất cả</Link>
+                    <p className="text-sm font-semibold text-slate-900">Active Filters</p>
+                    <Link href={clearFilter()} className="text-xs text-rose-500 hover:underline">Clear All</Link>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {brand && (
@@ -110,7 +130,7 @@ export default async function ProductsPage({
 
               {/* Brand filter */}
               <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="mb-3 text-sm font-semibold text-slate-900">Thương hiệu</p>
+                <p className="mb-3 text-sm font-semibold text-slate-900">Brand</p>
                 <div className="space-y-2">
                   {BRANDS.map((b) => (
                     <Link
@@ -130,7 +150,7 @@ export default async function ProductsPage({
 
               {/* Category filter */}
               <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="mb-3 text-sm font-semibold text-slate-900">Danh mục</p>
+                <p className="mb-3 text-sm font-semibold text-slate-900">Category</p>
                 <div className="space-y-2">
                   {CATEGORIES.map((c) => (
                     <Link
@@ -156,26 +176,26 @@ export default async function ProductsPage({
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-semibold text-slate-900">
-                  {brand ? `Giày ${brand}` : category ? `Giày ${category}` : q ? `Kết quả: "${q}"` : "Tất cả sản phẩm"}
+                  {brand ? `${brand} Shoes` : category ? `${category} Shoes` : q ? `Results for "${q}"` : "All Products"}
                 </h1>
-                <p className="text-sm text-slate-500 mt-1">{products.length} sản phẩm</p>
+                <p className="text-sm text-slate-500 mt-1">{products.length} {products.length === 1 ? "product" : "products"}</p>
               </div>
               <div className="flex items-center gap-3">
                 {/* Mobile filter button */}
                 <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm lg:hidden">
                   <FaFilter className="text-xs" />
-                  Lọc
+                  Filter
                 </button>
                 {/* Sort */}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 hidden sm:block">Sắp xếp:</span>
+                  <span className="text-sm text-slate-500 hidden sm:block">Sort by:</span>
                   <div className="flex gap-1">
                     {[
-                      { label: "Mới nhất", value: "" },
-                      { label: "Giá ↑", value: "price-asc" },
-                      { label: "Giá ↓", value: "price-desc" },
-                      { label: "Đánh giá", value: "rating" },
-                      { label: "Bán chạy", value: "sold" },
+                      { label: "Newest", value: "" },
+                      { label: "Price ↑", value: "price-asc" },
+                      { label: "Price ↓", value: "price-desc" },
+                      { label: "Rating", value: "rating" },
+                      { label: "Best Sellers", value: "sold" },
                     ].map((s) => (
                       <Link
                         key={s.value}
@@ -198,15 +218,15 @@ export default async function ProductsPage({
             {products.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-24 text-center shadow-sm">
                 <div className="text-6xl mb-4">👟</div>
-                <h2 className="text-xl font-semibold text-slate-900">Không tìm thấy sản phẩm</h2>
-                <p className="mt-2 text-slate-500">Thử bỏ bộ lọc hoặc tìm kiếm với từ khóa khác.</p>
+                <h2 className="text-xl font-semibold text-slate-900">No products found</h2>
+                <p className="mt-2 text-slate-500">Try removing filters or search with a different keyword.</p>
                 <Link href="/products" className="mt-6 rounded-full bg-[#0d3a6b] px-6 py-2 text-sm font-semibold text-white">
-                  Xem tất cả sản phẩm
+                  View all products
                 </Link>
               </div>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {products.map((product) => {
+                {visibleProducts.map((product) => {
                   const img = getProductImage(product);
                   return (
                     <Link
@@ -250,11 +270,11 @@ export default async function ProductsPage({
                             </div>
                             <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                               <FaStar className="text-amber-400" />
-                              {product.rating.toFixed(1)} · {product.sold} đã bán
+                              {product.rating.toFixed(1)} · {product.sold} sold
                             </div>
                           </div>
                           <span className="rounded-full bg-[#0d3a6b] px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
-                            Xem
+                            View
                           </span>
                         </div>
                         {product.promotion && (
@@ -264,6 +284,48 @@ export default async function ProductsPage({
                     </Link>
                   );
                 })}
+              </div>
+            )}
+
+            {products.length > 0 && totalPages > 1 && (
+              <div className="mt-8 flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <Link
+                    href={buildPageUrl(safePage - 1)}
+                    aria-disabled={safePage === 1}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      safePage === 1
+                        ? "pointer-events-none border-slate-200 bg-slate-50 text-slate-300"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    &lsaquo;
+                  </Link>
+                  {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                    <Link
+                      key={pageNumber}
+                      href={buildPageUrl(pageNumber)}
+                      className={`min-w-10 rounded-xl px-3 py-2 text-sm font-semibold text-center transition-colors ${
+                        pageNumber === safePage
+                          ? "bg-[#0d3a6b] text-white"
+                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {pageNumber}
+                    </Link>
+                  ))}
+                  <Link
+                    href={buildPageUrl(safePage + 1)}
+                    aria-disabled={safePage === totalPages}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      safePage === totalPages
+                        ? "pointer-events-none border-slate-200 bg-slate-50 text-slate-300"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    &rsaquo;
+                  </Link>
+                </div>
               </div>
             )}
           </div>

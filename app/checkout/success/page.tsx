@@ -14,27 +14,27 @@ export default function CheckoutSuccessPage() {
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-slate-900 mb-4">Đặt hàng thành công!</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-4">Order Placed Successfully!</h1>
           <p className="text-lg text-slate-600 max-w-md mx-auto leading-relaxed">
-            Cảm ơn bạn đã mua sắm tại <span className="font-semibold text-[#0d3a6b]">myshoes.vn</span>. Đơn hàng của bạn đã được ghi nhận và đang được xử lý.
+            Thank you for shopping at <span className="font-semibold text-[#0d3a6b]">myshoes.vn</span>. Your order has been recorded and is being processed.
           </p>
 
           <div className="mt-8 rounded-2xl bg-slate-50 w-full p-6 text-left border border-slate-100">
             <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <FaBoxOpen className="text-slate-400" /> Thông tin tiếp theo
+              <FaBoxOpen className="text-slate-400" /> Next Steps
             </h3>
             <ul className="space-y-3 text-sm text-slate-600">
               <li className="flex gap-3">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0d3a6b]/10 text-[10px] font-bold text-[#0d3a6b]">1</span>
-                Chúng tôi sẽ gọi điện xác nhận đơn hàng trong vòng 24h.
+                We will call you to confirm the order within 24 hours.
               </li>
               <li className="flex gap-3">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0d3a6b]/10 text-[10px] font-bold text-[#0d3a6b]">2</span>
-                Đơn hàng sẽ được giao đến bạn trong vòng 2-4 ngày làm việc.
+                Your order will be delivered within 2-4 business days.
               </li>
               <li className="flex gap-3">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0d3a6b]/10 text-[10px] font-bold text-[#0d3a6b]">3</span>
-                Bạn có thể kiểm tra email để xem lại chi tiết đơn hàng.
+                You can check your email to review the order details.
               </li>
             </ul>
           </div>
@@ -44,13 +44,13 @@ export default function CheckoutSuccessPage() {
               href="/products" 
               className="flex-1 rounded-full bg-[#0d3a6b] py-4 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5"
             >
-              Tiếp tục mua sắm
+              Continue Shopping
             </Link>
             <Link 
               href="/" 
               className="flex-1 rounded-full bg-white border border-slate-200 py-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
-              Về trang chủ
+              Back to Home
             </Link>
           </div>
 

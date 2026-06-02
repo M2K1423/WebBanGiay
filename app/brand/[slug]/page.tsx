@@ -13,19 +13,19 @@ export async function generateMetadata({
   const brandName = slug.charAt(0).toUpperCase() + slug.slice(1);
   if (slug.toLowerCase() === "sport") {
     return {
-      title: "Giày Sport Shoes Đa Năng | myshoes.vn",
-      description: "Khám phá bộ sưu tập Sport Shoes đa năng cho running, training và court với thiết kế linh hoạt, bám sân tốt và thoải mái cả ngày."
+      title: "Versatile Sport Shoes | myshoes.vn",
+      description: "Discover our collection of versatile Sport Shoes for running, training, and court. Flexible design, excellent traction, and all-day comfort."
     };
   }
   if (slug.toLowerCase() === "pickleball") {
     return {
-      title: "Giày Pickleball Chính Hãng | myshoes.vn",
-      description: "Khám phá bộ sưu tập giày Pickleball chính hãng mới nhất. Thiết kế ổn định, bám sân tốt và phù hợp thi đấu court."
+      title: "Authentic Pickleball Shoes | myshoes.vn",
+      description: "Explore the latest collection of authentic Pickleball shoes. Stable design, high traction, and perfect for court play."
     };
   }
   return {
-    title: `Giày ${brandName} Chính Hãng | myshoes.vn`,
-    description: `Mua giày ${brandName} chính hãng, giá tốt nhất thị trường tại myshoes.vn. Hàng chuẩn, giao nhanh, đổi trả dễ dàng.`
+    title: `Authentic ${brandName} Shoes | myshoes.vn`,
+    description: `Shop authentic ${brandName} shoes at the best prices on myshoes.vn. Genuine products, fast shipping, and easy returns.`
   };
 }
 
@@ -87,10 +87,10 @@ export default async function BrandPage({
             </h1>
             <p className="text-lg text-white/80">
               {isSport
-                ? "Bộ sưu tập Sport Shoes đa năng cho chạy bộ, tập luyện và các hoạt động court. Nhẹ, bám tốt và tối ưu cho chuyển động hằng ngày."
+                ? "Versatile Sport Shoes collection for running, training, and court activities. Lightweight, high-traction, and optimized for daily movement."
                 : isPickleball
-                ? "Khám phá bộ sưu tập giày Pickleball chính hãng mới nhất. Thiết kế ổn định, bám sân tốt và sẵn sàng cho các pha đổi hướng nhanh."
-                : `Khám phá bộ sưu tập giày ${brandName} chính hãng mới nhất. Thiết kế đột phá, hiệu năng vượt trội.`}
+                ? "Discover the latest collection of authentic Pickleball shoes. Stable design, high-traction, and ready for quick direction changes."
+                : `Discover the latest collection of authentic ${brandName} shoes. Innovative design, outstanding performance.`}
             </p>
             {isSport ? (
               <div className="mt-6 flex flex-wrap gap-2 text-sm">
@@ -114,9 +114,9 @@ export default async function BrandPage({
       <div className="bg-white border-b border-slate-100 mb-8">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-            <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Trang chủ</Link>
+            <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
             <FaChevronRight className="text-[10px]" />
-            <Link href="/products" className="hover:text-[#0d3a6b] transition-colors">Thương hiệu</Link>
+            <Link href="/products" className="hover:text-[#0d3a6b] transition-colors">Brands</Link>
             <FaChevronRight className="text-[10px]" />
             <span className="text-slate-900 font-medium">{brandName}</span>
           </nav>
@@ -126,17 +126,17 @@ export default async function BrandPage({
       <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-900">Sản phẩm {brandName}</h2>
-            <p className="text-sm text-slate-500 mt-1">{products.length} sản phẩm</p>
+            <h2 className="text-2xl font-semibold text-slate-900">{brandName} Products</h2>
+            <p className="text-sm text-slate-500 mt-1">{products.length} {products.length === 1 ? "product" : "products"}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500 hidden sm:block">Sắp xếp:</span>
+            <span className="text-sm text-slate-500 hidden sm:block">Sort by:</span>
             <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm border border-slate-200">
               {[
-                { label: "Mới nhất", value: "" },
-                { label: "Giá ↑", value: "price-asc" },
-                { label: "Giá ↓", value: "price-desc" },
-                { label: "Bán chạy", value: "sold" },
+                { label: "Newest", value: "" },
+                { label: "Price ↑", value: "price-asc" },
+                { label: "Price ↓", value: "price-desc" },
+                { label: "Best Sellers", value: "sold" },
               ].map((s) => (
                 <Link
                   key={s.label}
@@ -157,14 +157,14 @@ export default async function BrandPage({
         {products.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-24 text-center shadow-sm">
             <div className="text-6xl mb-4">👟</div>
-            <h2 className="text-xl font-semibold text-slate-900">Thương hiệu này đang trống</h2>
+            <h2 className="text-xl font-semibold text-slate-900">This brand is currently empty</h2>
             <p className="mt-2 text-slate-500">
               {isPickleball
-                ? "Chúng tôi đang cập nhật thêm sản phẩm pickleball phù hợp."
-                : `Chúng tôi đang cập nhật thêm sản phẩm ${brandName}.`}
+                ? "We are currently updating more pickleball products."
+                : `We are currently updating more ${brandName} products.`}
             </p>
             <Link href="/products" className="mt-6 rounded-full bg-[#0d3a6b] px-6 py-2 text-sm font-semibold text-white">
-              Xem các thương hiệu khác
+              View other brands
             </Link>
           </div>
         ) : (
@@ -212,7 +212,7 @@ export default async function BrandPage({
                         </div>
                         <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                           <FaStar className="text-amber-400" />
-                          {product.rating.toFixed(1)} · {product.sold} đã bán
+                          {product.rating.toFixed(1)} · {product.sold} sold
                         </div>
                       </div>
                     </div>

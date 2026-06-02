@@ -15,7 +15,7 @@ export async function generateMetadata({
   const product = await getProductById(id);
 
   if (!product) {
-    return { title: "Không tìm thấy sản phẩm" };
+    return { title: "Product Not Found" };
   }
 
   return {
@@ -47,9 +47,9 @@ export default async function ProductDetailPage({
       <div className="bg-white border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-            <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Trang chủ</Link>
+            <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
             <FaChevronRight className="text-[10px]" />
-            <Link href="/products" className="hover:text-[#0d3a6b] transition-colors">Sản phẩm</Link>
+            <Link href="/products" className="hover:text-[#0d3a6b] transition-colors">Products</Link>
             <FaChevronRight className="text-[10px]" />
             <Link href={`/products?category=${product.category}`} className="hover:text-[#0d3a6b] transition-colors">{product.category}</Link>
             <FaChevronRight className="text-[10px]" />
@@ -72,9 +72,9 @@ export default async function ProductDetailPage({
               <div className="flex items-center gap-1.5 text-sm text-slate-500">
                 <FaStar className="text-amber-400" />
                 <span className="font-semibold text-slate-900">{product.rating.toFixed(1)}</span>
-                <span>({product.reviewCount} đánh giá)</span>
+                <span>({product.reviewCount} reviews)</span>
                 <span className="px-1.5">·</span>
-                <span>{product.sold} đã bán</span>
+                <span>{product.sold} sold</span>
               </div>
             </div>
 
@@ -115,8 +115,8 @@ export default async function ProductDetailPage({
                   <FaShieldHeart className="text-lg" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-900">100% Chính hãng</p>
-                  <p className="text-[11px] text-slate-500">Đền gấp 10 nếu fake</p>
+                  <p className="text-xs font-semibold text-slate-900">100% Authentic</p>
+                  <p className="text-[11px] text-slate-500">10x refund if fake</p>
                 </div>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
@@ -124,8 +124,8 @@ export default async function ProductDetailPage({
                   <FaArrowsRotate className="text-lg" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-900">Đổi trả 30 ngày</p>
-                  <p className="text-[11px] text-slate-500">Miễn phí đổi size</p>
+                  <p className="text-xs font-semibold text-slate-900">30-Day Returns</p>
+                  <p className="text-[11px] text-slate-500">Free size exchange</p>
                 </div>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
@@ -133,14 +133,14 @@ export default async function ProductDetailPage({
                   <FaMedal className="text-lg" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-900">Bảo hành 1 năm</p>
-                  <p className="text-[11px] text-slate-500">Yên tâm sử dụng</p>
+                  <p className="text-xs font-semibold text-slate-900">1-Year Warranty</p>
+                  <p className="text-[11px] text-slate-500">Shop with confidence</p>
                 </div>
               </div>
             </div>
 
             <div className="mt-10">
-              <h3 className="text-lg font-semibold text-slate-900">Mô tả sản phẩm</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Product Description</h3>
               <div className="mt-4 prose prose-sm max-w-none text-slate-600">
                 <p className="whitespace-pre-line">{product.description}</p>
               </div>
@@ -152,7 +152,7 @@ export default async function ProductDetailPage({
       {/* Related Products */}
       {filteredRelated.length > 0 && (
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-semibold text-slate-900 mb-8">Sản phẩm tương tự</h2>
+          <h2 className="text-2xl font-semibold text-slate-900 mb-8">Related Products</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {filteredRelated.map((item) => {
               const relatedImg = getProductImage(item);
