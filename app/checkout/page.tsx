@@ -90,13 +90,13 @@ export default function CheckoutPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Không tạo được đơn hàng");
+        throw new Error("Failed to create order");
       }
 
       clearCart();
       router.push("/checkout/success");
     } catch {
-      alert("Không tạo được đơn hàng. Vui lòng thử lại.");
+      alert("Failed to create order. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -108,17 +108,17 @@ export default function CheckoutPage() {
       <div className="bg-white border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-2 text-sm text-slate-500">
-            <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Trang chủ</Link>
+            <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
             <FaChevronRight className="text-[10px]" />
-            <Link href="/cart" className="hover:text-[#0d3a6b] transition-colors">Giỏ hàng</Link>
+            <Link href="/cart" className="hover:text-[#0d3a6b] transition-colors">Cart</Link>
             <FaChevronRight className="text-[10px]" />
-            <span className="text-slate-900 font-medium">Thanh toán</span>
+            <span className="text-slate-900 font-medium">Checkout</span>
           </nav>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 mt-8 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-semibold text-slate-900 mb-6">Thanh toán</h1>
+        <h1 className="text-2xl font-semibold text-slate-900 mb-6">Checkout</h1>
 
         <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[1fr_450px]">
           {/* Checkout Form */}
@@ -129,13 +129,13 @@ export default function CheckoutPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0d3a6b]/10 text-[#0d3a6b]">
                   <FaLocationDot />
                 </div>
-                <h2 className="text-lg font-semibold text-slate-900">Thông tin giao hàng</h2>
+                <h2 className="text-lg font-semibold text-slate-900">Shipping Information</h2>
               </div>
               
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Họ và tên <span className="text-rose-500">*</span>
+                    Full Name <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -145,13 +145,13 @@ export default function CheckoutPage() {
                     value={formData.fullName}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
-                    placeholder="Nhập họ và tên người nhận"
+                    placeholder="Enter recipient's full name"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Số điện thoại <span className="text-rose-500">*</span>
+                    Phone Number <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -161,7 +161,7 @@ export default function CheckoutPage() {
                     value={formData.phone}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
-                    placeholder="Nhập số điện thoại"
+                    placeholder="Enter phone number"
                   />
                 </div>
 
@@ -176,13 +176,13 @@ export default function CheckoutPage() {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
-                    placeholder="Để nhận thông báo đơn hàng"
+                    placeholder="To receive order updates"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
                   <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Địa chỉ giao hàng <span className="text-rose-500">*</span>
+                    Shipping Address <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -192,13 +192,13 @@ export default function CheckoutPage() {
                     value={formData.address}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
-                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                    placeholder="House number, street, ward, district, city"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
                   <label htmlFor="note" className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Ghi chú đơn hàng (Tùy chọn)
+                    Order Note (Optional)
                   </label>
                   <textarea
                     id="note"
@@ -207,7 +207,7 @@ export default function CheckoutPage() {
                     value={formData.note}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
-                    placeholder="Ví dụ: Giao hàng giờ hành chính..."
+                    placeholder="E.g., Deliver during business hours..."
                   />
                 </div>
               </div>
@@ -219,7 +219,7 @@ export default function CheckoutPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                   <FaMoneyBillWave />
                 </div>
-                <h2 className="text-lg font-semibold text-slate-900">Phương thức thanh toán</h2>
+                <h2 className="text-lg font-semibold text-slate-900">Payment Method</h2>
               </div>
 
               <div className="space-y-3">
@@ -233,8 +233,8 @@ export default function CheckoutPage() {
                       {formData.paymentMethod === "cod" && <div className="h-3 w-3 rounded-full bg-[#0d3a6b]" />}
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">Thanh toán khi nhận hàng (COD)</p>
-                      <p className="text-xs text-slate-500">Thanh toán bằng tiền mặt khi giao hàng</p>
+                      <p className="font-semibold text-slate-900">Cash on Delivery (COD)</p>
+                      <p className="text-xs text-slate-500">Pay with cash upon delivery</p>
                     </div>
                   </div>
                   <div className="h-8 w-12 rounded bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">COD</div>
@@ -250,8 +250,8 @@ export default function CheckoutPage() {
                       {formData.paymentMethod === "vnpay" && <div className="h-3 w-3 rounded-full bg-[#0d3a6b]" />}
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">Thanh toán VNPay (Đang bảo trì)</p>
-                      <p className="text-xs text-slate-500">ATM/Visa/MasterCard/JCB</p>
+                      <p className="font-semibold text-slate-900">VNPay Payment (Under Maintenance)</p>
+                      <p className="text-xs text-slate-500">ATM / Visa / MasterCard / JCB</p>
                     </div>
                   </div>
                 </label>
@@ -262,7 +262,7 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <div>
             <div className="sticky top-24 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6">Đơn hàng của bạn</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-6">Your Order</h2>
               
               <div className="mb-6 space-y-4 max-h-[300px] overflow-y-auto pr-2">
                 {items.map((item) => (
@@ -286,17 +286,17 @@ export default function CheckoutPage() {
 
               <div className="space-y-3 text-sm border-t border-slate-100 pt-6">
                 <div className="flex justify-between text-slate-600">
-                  <span>Tạm tính ({count} sản phẩm)</span>
+                  <span>Subtotal ({count} {count === 1 ? "item" : "items"})</span>
                   <span className="font-medium text-slate-900">{formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>Phí giao hàng</span>
-                  <span className="font-medium text-slate-900">Miễn phí</span>
+                  <span>Shipping</span>
+                  <span className="font-medium text-[#0d3a6b] font-semibold">Free</span>
                 </div>
                 
                 <div className="border-t border-dashed border-slate-200 pt-4 mt-2">
                   <div className="flex items-end justify-between">
-                    <span className="font-semibold text-slate-900 text-base">Tổng cộng</span>
+                    <span className="font-semibold text-slate-900 text-base">Total</span>
                     <div className="text-right">
                       <span className="text-2xl font-semibold text-rose-600">{formatPrice(total)}</span>
                     </div>
@@ -310,10 +310,10 @@ export default function CheckoutPage() {
                 className="mt-8 w-full rounded-full bg-[#0d3a6b] py-4 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0 flex justify-center items-center gap-2"
               >
                 {isSubmitting ? (
-                  <>Đang xử lý...</>
+                  <>Processing...</>
                 ) : (
                   <>
-                    <FaShieldHalved /> Đặt hàng ngay
+                    <FaShieldHalved /> Place Order Now
                   </>
                 )}
               </button>

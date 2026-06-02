@@ -21,15 +21,15 @@ export default function CartPage() {
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-slate-50 text-4xl text-slate-300 mb-6">
               <FaBagShopping />
             </div>
-            <h1 className="text-2xl font-semibold text-slate-900">Giỏ hàng của bạn đang trống</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">Your cart is empty</h1>
             <p className="mt-2 text-slate-500 max-w-sm">
-              Có vẻ như bạn chưa chọn mua sản phẩm nào. Hãy khám phá các bộ sưu tập mới nhất của chúng tôi nhé.
+              It looks like you haven't added any products to your cart yet. Explore our latest collections.
             </p>
             <Link 
               href="/products" 
               className="mt-8 rounded-full bg-[#0d3a6b] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5"
             >
-              Tiếp tục mua sắm
+              Continue Shopping
             </Link>
           </div>
         </div>
@@ -43,16 +43,16 @@ export default function CartPage() {
       <div className="bg-white border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-2 text-sm text-slate-500">
-            <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Trang chủ</Link>
+            <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
             <FaChevronRight className="text-[10px]" />
-            <span className="text-slate-900 font-medium">Giỏ hàng</span>
+            <span className="text-slate-900 font-medium">Cart</span>
           </nav>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 mt-8 sm:px-6 lg:px-8">
         <h1 className="text-2xl font-semibold text-slate-900 mb-6">
-          Giỏ hàng <span className="text-slate-500 text-lg font-normal tracking-normal">({count} sản phẩm)</span>
+          Shopping Cart <span className="text-slate-500 text-lg font-normal tracking-normal">({count} {count === 1 ? "item" : "items"})</span>
         </h1>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
@@ -83,13 +83,13 @@ export default function CartPage() {
                         {item.name}
                       </Link>
                       <p className="mt-1 text-xs text-slate-500">
-                        Phân loại: {item.color ? `${item.color}, ` : ""}Size {item.size}
+                        Variant: {item.color ? `${item.color}, ` : ""}Size {item.size}
                       </p>
                     </div>
                     <button 
                       onClick={() => removeItem(item.productId, item.size, item.color)}
                       className="text-slate-400 transition-colors hover:text-rose-500"
-                      aria-label="Xóa sản phẩm"
+                      aria-label="Remove item"
                     >
                       <FaTrashCan />
                     </button>
@@ -127,24 +127,24 @@ export default function CartPage() {
           {/* Order Summary */}
           <div className="lg:sticky lg:top-24">
             <div className="rounded-3xl bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6">Tóm tắt đơn hàng</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-6">Order Summary</h2>
               
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between text-slate-600">
-                  <span>Tạm tính ({count} sản phẩm)</span>
+                  <span>Subtotal ({count} {count === 1 ? "item" : "items"})</span>
                   <span className="font-medium text-slate-900">{formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>Phí giao hàng</span>
-                  <span className="font-medium text-slate-900">Miễn phí</span>
+                  <span>Shipping</span>
+                  <span className="font-medium text-[#0d3a6b] font-semibold">Free</span>
                 </div>
                 
                 <div className="border-t border-dashed border-slate-200 pt-4">
                   <div className="flex items-end justify-between">
-                    <span className="font-semibold text-slate-900">Tổng cộng</span>
+                    <span className="font-semibold text-slate-900">Total</span>
                     <div className="text-right">
                       <span className="text-2xl font-semibold text-rose-600">{formatPrice(total)}</span>
-                      <p className="text-[11px] text-slate-500 mt-0.5">(Đã bao gồm VAT nếu có)</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">(VAT included if applicable)</p>
                     </div>
                   </div>
                 </div>
@@ -154,17 +154,17 @@ export default function CartPage() {
                 onClick={() => router.push("/checkout")}
                 className="mt-8 w-full rounded-full bg-[#0d3a6b] py-4 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5"
               >
-                Tiến hành thanh toán
+                Proceed to Checkout
               </button>
-
+ 
               <div className="mt-6 flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 text-xs text-slate-500">
                 <p className="flex items-center gap-2">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-[10px] text-emerald-600">✓</span>
-                  Freeship cho mọi đơn hàng
+                  Free shipping on all orders
                 </p>
                 <p className="flex items-center gap-2">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] text-blue-600">✓</span>
-                  Đổi trả miễn phí trong 30 ngày
+                  Free returns within 30 days
                 </p>
               </div>
             </div>

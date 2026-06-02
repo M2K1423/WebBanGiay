@@ -6,8 +6,8 @@ import { getAllProducts, getProductImage } from "@/lib/products";
 const PRODUCTS_PER_PAGE = 9;
 
 export const metadata: Metadata = {
-  title: "Tất cả sản phẩm | myshoes.vn",
-  description: "Khám phá bộ sưu tập giày Nike, Adidas, Puma chính hãng tại myshoes.vn"
+  title: "All Products | myshoes.vn",
+  description: "Explore our collection of authentic Nike, Adidas, Puma shoes at myshoes.vn"
 };
 
 const BRANDS = ["Nike", "Adidas", "Puma", "Salomon", "Under Armour", "New Balance", "Vans", "Reebok", "Asics"];
@@ -93,9 +93,9 @@ export default async function ProductsPage({
       {/* Breadcrumb */}
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <nav className="flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Trang chủ</Link>
+          <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
           <FaChevronRight className="text-xs" />
-          <span className="text-slate-900 font-medium">Sản phẩm</span>
+          <span className="text-slate-900 font-medium">Products</span>
         </nav>
       </div>
 
@@ -108,8 +108,8 @@ export default async function ProductsPage({
               {(brand || category) && (
                 <div className="rounded-2xl bg-white p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-semibold text-slate-900">Bộ lọc đang dùng</p>
-                    <Link href={clearFilter()} className="text-xs text-rose-500 hover:underline">Xóa tất cả</Link>
+                    <p className="text-sm font-semibold text-slate-900">Active Filters</p>
+                    <Link href={clearFilter()} className="text-xs text-rose-500 hover:underline">Clear All</Link>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {brand && (
@@ -130,7 +130,7 @@ export default async function ProductsPage({
 
               {/* Brand filter */}
               <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="mb-3 text-sm font-semibold text-slate-900">Thương hiệu</p>
+                <p className="mb-3 text-sm font-semibold text-slate-900">Brand</p>
                 <div className="space-y-2">
                   {BRANDS.map((b) => (
                     <Link
@@ -150,7 +150,7 @@ export default async function ProductsPage({
 
               {/* Category filter */}
               <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="mb-3 text-sm font-semibold text-slate-900">Danh mục</p>
+                <p className="mb-3 text-sm font-semibold text-slate-900">Category</p>
                 <div className="space-y-2">
                   {CATEGORIES.map((c) => (
                     <Link
@@ -176,26 +176,26 @@ export default async function ProductsPage({
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-semibold text-slate-900">
-                  {brand ? `Giày ${brand}` : category ? `Giày ${category}` : q ? `Kết quả: "${q}"` : "Tất cả sản phẩm"}
+                  {brand ? `${brand} Shoes` : category ? `${category} Shoes` : q ? `Results for "${q}"` : "All Products"}
                 </h1>
-                <p className="text-sm text-slate-500 mt-1">{products.length} sản phẩm</p>
+                <p className="text-sm text-slate-500 mt-1">{products.length} {products.length === 1 ? "product" : "products"}</p>
               </div>
               <div className="flex items-center gap-3">
                 {/* Mobile filter button */}
                 <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm lg:hidden">
                   <FaFilter className="text-xs" />
-                  Lọc
+                  Filter
                 </button>
                 {/* Sort */}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 hidden sm:block">Sắp xếp:</span>
+                  <span className="text-sm text-slate-500 hidden sm:block">Sort by:</span>
                   <div className="flex gap-1">
                     {[
-                      { label: "Mới nhất", value: "" },
-                      { label: "Giá ↑", value: "price-asc" },
-                      { label: "Giá ↓", value: "price-desc" },
-                      { label: "Đánh giá", value: "rating" },
-                      { label: "Bán chạy", value: "sold" },
+                      { label: "Newest", value: "" },
+                      { label: "Price ↑", value: "price-asc" },
+                      { label: "Price ↓", value: "price-desc" },
+                      { label: "Rating", value: "rating" },
+                      { label: "Best Sellers", value: "sold" },
                     ].map((s) => (
                       <Link
                         key={s.value}
@@ -218,10 +218,10 @@ export default async function ProductsPage({
             {products.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-24 text-center shadow-sm">
                 <div className="text-6xl mb-4">👟</div>
-                <h2 className="text-xl font-semibold text-slate-900">Không tìm thấy sản phẩm</h2>
-                <p className="mt-2 text-slate-500">Thử bỏ bộ lọc hoặc tìm kiếm với từ khóa khác.</p>
+                <h2 className="text-xl font-semibold text-slate-900">No products found</h2>
+                <p className="mt-2 text-slate-500">Try removing filters or search with a different keyword.</p>
                 <Link href="/products" className="mt-6 rounded-full bg-[#0d3a6b] px-6 py-2 text-sm font-semibold text-white">
-                  Xem tất cả sản phẩm
+                  View all products
                 </Link>
               </div>
             ) : (
@@ -270,11 +270,11 @@ export default async function ProductsPage({
                             </div>
                             <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                               <FaStar className="text-amber-400" />
-                              {product.rating.toFixed(1)} · {product.sold} đã bán
+                              {product.rating.toFixed(1)} · {product.sold} sold
                             </div>
                           </div>
                           <span className="rounded-full bg-[#0d3a6b] px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
-                            Xem
+                            View
                           </span>
                         </div>
                         {product.promotion && (

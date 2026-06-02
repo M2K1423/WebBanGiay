@@ -8,55 +8,55 @@ import { useCart } from "@/features/cart/CartContext";
 const ACCESSORY_PRODUCTS = [
   {
     id: "acc-socks-01",
-    name: "Tất Thể Thao Chống Trượt Cao Cấp",
+    name: "Premium Anti-Slip Athletic Socks",
     price: "150.000đ",
     oldPrice: "195.000đ",
     discount: "-23%",
     image: "https://images.unsplash.com/photo-1582966772680-860e372bb558?auto=format&fit=crop&w=600&q=80",
-    colors: ["Trắng", "Đen", "Xám"],
+    colors: ["White", "Black", "Grey"],
     sizes: ["M (36-40)", "L (41-45)"],
     rating: 4.9,
     sold: 432,
-    description: "Tất dệt kim cotton cao cấp với các hạt silicone chống trượt ở lòng bàn chân, bám giày tối đa, hấp thụ rung động lực đẩy khi thi đấu thể thao cường độ cao."
+    description: "Premium cotton knit socks with anti-slip silicone grippers on the sole, offering maximum traction and shock absorption for high-intensity sports."
   },
   {
     id: "acc-sole-02",
-    name: "Lót Giày Silicon Gel Hoạt Tính 3D",
+    name: "3D Active Gel Silicone Insoles",
     price: "250.000đ",
     oldPrice: "320.000đ",
     discount: "-21%",
     image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80",
-    colors: ["Xanh dương"],
+    colors: ["Blue"],
     sizes: ["S (35-39)", "L (40-45)"],
     rating: 4.8,
     sold: 219,
-    description: "Đế lót giày gel silicone siêu êm ái, đệm 3D nâng đỡ vòm bàn chân, chống mỏi và giảm chấn thương gót chân hiệu quả cho người đứng nhiều."
+    description: "Ultra-comfortable gel silicone shoe insoles with 3D arch support to reduce fatigue and prevent heel injuries, perfect for long-standing activities."
   },
   {
     id: "acc-lace-03",
-    name: "Dây Giày Phản Quang Khóa Xoay Thông Minh",
+    name: "Smart Dial Lock Reflective Shoelaces",
     price: "75.000đ",
     oldPrice: "110.000đ",
     discount: "-31%",
     image: "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=600&q=80",
-    colors: ["Đen phản quang", "Trắng phản quang", "Vàng Neon"],
+    colors: ["Reflective Black", "Reflective White", "Neon Yellow"],
     sizes: ["Standard"],
     rating: 4.7,
     sold: 654,
-    description: "Chất liệu thun co giãn kết hợp sợi dệt phản quang ban đêm siêu sáng. Khóa xoay hợp kim chắc chắn giúp mang tháo cực nhanh mà không lo tuột dây."
+    description: "Elastic stretch material combined with high-visibility nighttime reflective threads. Solid alloy dial lock system for quick wear and release."
   },
   {
     id: "acc-spray-04",
-    name: "Xịt Khử Mùi Giày Công Nghệ Nano Bạc",
+    name: "Silver Nano Shoe Deodorant Spray",
     price: "120.000đ",
     oldPrice: "160.000đ",
     discount: "-25%",
     image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80",
-    colors: ["Bạc tiêu chuẩn"],
-    sizes: ["Chai 150ml"],
+    colors: ["Standard Silver"],
+    sizes: ["150ml Bottle"],
     rating: 4.9,
     sold: 812,
-    description: "Hạt phân tử Nano bạc kháng khuẩn mạnh mẽ, khử sạch mùi hôi ẩm mốc lập tức, sấy khô giày nhanh chóng và mang lại mùi hương dịu mát suốt ngày dài."
+    description: "Powerful antibacterial Silver Nano particles instantly eliminate odors and humidity, keeping shoes dry and freshly scented all day."
   }
 ];
 
@@ -85,7 +85,7 @@ export default function AccessoriesPage() {
     addItem({
       productId: product.id,
       name: product.name,
-      brand: "Phụ kiện",
+      brand: "Accessories",
       price: product.price,
       oldPrice: product.oldPrice,
       image: product.image,
@@ -93,7 +93,7 @@ export default function AccessoriesPage() {
       color
     });
 
-    setNotification(`Đã thêm "${product.name}" (${color}, ${size}) vào giỏ hàng!`);
+    setNotification(`Added "${product.name}" (${color}, ${size}) to cart!`);
     setTimeout(() => {
       setNotification(null);
     }, 3000);
@@ -114,10 +114,10 @@ export default function AccessoriesPage() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="max-w-2xl">
             <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-              Phụ kiện giày cao cấp
+              Premium Shoe Accessories
             </h1>
             <p className="mt-4 text-base text-white/80 sm:text-lg">
-              Bảo vệ đôi chân của bạn tốt hơn và kéo dài tuổi thọ cho đôi giày yêu thích bằng những phụ kiện chăm sóc và hỗ trợ tập luyện thể thao chuyên nghiệp.
+              Take better care of your feet and extend the lifespan of your favorite shoes with professional shoe care and support accessories.
             </p>
           </div>
         </div>
@@ -126,9 +126,9 @@ export default function AccessoriesPage() {
       {/* Breadcrumb */}
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <nav className="flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Trang chủ</Link>
+          <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
           <FaChevronRight className="text-xs" />
-          <span className="text-slate-900 font-medium">Phụ kiện</span>
+          <span className="text-slate-900 font-medium">Accessories</span>
         </nav>
       </div>
 
@@ -160,11 +160,11 @@ export default function AccessoriesPage() {
                 <div className="flex flex-1 flex-col justify-between p-6">
                   <div>
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-xs font-bold uppercase tracking-wider text-[#0d3a6b]">Phụ kiện hãng</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#0d3a6b]">Accessories</span>
                       <div className="flex items-center gap-1 text-xs text-slate-500">
                         <FaStar className="text-amber-400" />
                         <span className="font-semibold text-slate-900">{product.rating}</span>
-                        <span>({product.sold} đã bán)</span>
+                        <span>({product.sold} sold)</span>
                       </div>
                     </div>
 
@@ -178,7 +178,7 @@ export default function AccessoriesPage() {
                     {/* Color selectors */}
                     {product.colors.length > 1 && (
                       <div className="mt-4">
-                        <span className="text-xs font-semibold text-slate-700">Màu sắc:</span>
+                        <span className="text-xs font-semibold text-slate-700">Colors:</span>
                         <div className="mt-1.5 flex flex-wrap gap-2">
                           {product.colors.map(col => (
                             <button
@@ -201,7 +201,7 @@ export default function AccessoriesPage() {
                     {/* Size selectors */}
                     {product.sizes.length > 1 && (
                       <div className="mt-3">
-                        <span className="text-xs font-semibold text-slate-700">Kích thước:</span>
+                        <span className="text-xs font-semibold text-slate-700">Sizes:</span>
                         <div className="mt-1.5 flex flex-wrap gap-2">
                           {product.sizes.map(sz => (
                             <button
@@ -236,7 +236,7 @@ export default function AccessoriesPage() {
                       onClick={() => handleAddToCart(product)}
                       className="flex items-center gap-2 rounded-full bg-[#0d3a6b] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#0b2f55] hover:scale-105 active:scale-95"
                     >
-                      <FaBagShopping /> Thêm vào giỏ
+                      <FaBagShopping /> Add to cart
                     </button>
                   </div>
                 </div>

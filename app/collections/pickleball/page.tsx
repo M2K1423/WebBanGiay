@@ -13,7 +13,7 @@ import { getAllProducts, getProductImage } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "Pickleball Shoes | myshoes.vn",
-  description: "Khám phá giày pickleball tối ưu cho chuyển động ngang, độ bám và độ ổn định khi thi đấu."
+  description: "Explore pickleball shoes optimized for lateral movement, traction, and stability on the court."
 };
 
 function priceValue(price: string) {
@@ -34,18 +34,18 @@ export default async function PickleballCollectionPage() {
 
   const highlights = [
     {
-      title: "Bám sân tốt",
-      desc: "Đế ổn định cho các pha đổi hướng nhanh.",
+      title: "High Traction",
+      desc: "Stable outsole for quick direction changes.",
       icon: FaShieldHeart
     },
     {
-      title: "Giảm chấn êm",
-      desc: "Hỗ trợ các bước chạy ngắn và bật nhảy liên tục.",
+      title: "Cushioning",
+      desc: "Supports short sprints and continuous jumps.",
       icon: FaArrowsRotate
     },
     {
-      title: "Thi đấu bền",
-      desc: "Tối ưu cho cường độ chơi pickleball mỗi ngày.",
+      title: "Durable Play",
+      desc: "Optimized for daily high-intensity pickleball matches.",
       icon: FaMedal
     }
   ];
@@ -59,20 +59,20 @@ export default async function PickleballCollectionPage() {
               <FaTableTennisPaddleBall /> Pickleball Shoes
             </div>
             <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-              Giày pickleball cho những pha đổi hướng nhanh và bám sân chắc hơn.
+              Pickleball shoes for quick direction changes and better traction.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-white/80 sm:text-lg">
-              Dòng giày này tập trung vào độ ổn định, độ bám và cảm giác chân linh hoạt khi di chuyển ngang.
-              Chọn mẫu phù hợp để chơi lâu hơn và an toàn hơn trên sân.
+              Designed for lateral stability, exceptional grip, and flexible feel.
+              Choose the right pair to play longer and safer on the court.
             </p>
-
+ 
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#pickleball-products" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0d3a6b]">
-                Xem sản phẩm
+                View Products
                 <FaChevronRight className="text-xs" />
               </a>
               <a href="/products?category=Court" className="inline-flex items-center gap-2 rounded-full border border-white/30 px-5 py-3 text-sm font-semibold text-white">
-                Mở danh mục Court
+                Open Court Category
               </a>
             </div>
 
@@ -92,27 +92,27 @@ export default async function PickleballCollectionPage() {
           <div className="grid gap-4 self-end sm:grid-cols-2 lg:grid-cols-1">
             <div className="rounded-3xl bg-white p-6 text-[#0f2340] shadow-2xl shadow-black/10">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0d3a6b]">Curated pick</p>
-              <h2 className="mt-3 text-2xl font-semibold">Dành cho sân court và luyện tập</h2>
+              <h2 className="mt-3 text-2xl font-semibold">For Court and Training</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Chúng tôi ưu tiên các đôi giày court/training từ catalog hiện có để tạo bộ sưu tập phù hợp với pickleball.
+                We prioritize court/training shoes from our catalog to create a collection suited for pickleball.
               </p>
             </div>
-
+ 
             <div className="rounded-3xl bg-white/10 p-6 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Tổng quan</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Overview</p>
               <div className="mt-4 grid grid-cols-2 gap-4 text-white">
                 <div className="rounded-2xl bg-white/10 p-4">
-                  <p className="text-xs text-white/70">Số mẫu hiển thị</p>
+                  <p className="text-xs text-white/70">Models Displayed</p>
                   <p className="mt-2 text-2xl font-bold">{featuredCount}</p>
                 </div>
                 <div className="rounded-2xl bg-white/10 p-4">
-                  <p className="text-xs text-white/70">Giá trung bình</p>
-                  <p className="mt-2 text-2xl font-bold">{averagePrice ? `${averagePrice.toLocaleString("vi-VN")}đ` : "-"}</p>
+                  <p className="text-xs text-white/70">Average Price</p>
+                  <p className="mt-2 text-2xl font-bold">{averagePrice ? `${averagePrice.toLocaleString("en-US")} VND` : "-"}</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2 text-sm text-white/80">
                 <FaBolt className="text-amber-300" />
-                Tối ưu cho những ai đang tìm một đôi court shoe dễ chuyển hướng hơn.
+                Optimized for those looking for agile court shoes.
               </div>
             </div>
           </div>
@@ -121,7 +121,7 @@ export default async function PickleballCollectionPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <nav className="flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Trang chủ</Link>
+          <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
           <FaChevronRight className="text-xs" />
           <span className="text-slate-900 font-medium">Pickleball Shoes</span>
         </nav>
@@ -132,10 +132,10 @@ export default async function PickleballCollectionPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Collection</p>
             <h2 className="text-2xl font-semibold text-slate-900">Pickleball-ready shoes</h2>
-            <p className="mt-1 text-sm text-slate-500">Các mẫu court/training phù hợp cho di chuyển ngang và độ ổn định.</p>
+            <p className="mt-1 text-sm text-slate-500">Court/training models suitable for lateral movement and stability.</p>
           </div>
           <Link href="/products?category=Court" className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b]">
-            Xem thêm Court
+            See more Court
             <FaChevronRight />
           </Link>
         </div>
@@ -143,10 +143,10 @@ export default async function PickleballCollectionPage() {
         {products.length === 0 ? (
           <div className="rounded-3xl bg-white py-24 text-center shadow-sm">
             <div className="text-6xl mb-4">🏓</div>
-            <h3 className="text-xl font-semibold text-slate-900">Chưa có sản phẩm pickleball phù hợp</h3>
-            <p className="mt-2 text-slate-500">Hãy thử mở danh mục Court hoặc Training để xem các mẫu gần nhất.</p>
+            <h3 className="text-xl font-semibold text-slate-900">No suitable pickleball products found</h3>
+            <p className="mt-2 text-slate-500">Try opening the Court or Training category to see nearby styles.</p>
             <Link href="/products" className="mt-6 inline-flex rounded-full bg-[#0d3a6b] px-6 py-3 text-sm font-semibold text-white">
-              Xem tất cả sản phẩm
+              View all products
             </Link>
           </div>
         ) : (
@@ -194,7 +194,7 @@ export default async function PickleballCollectionPage() {
                         </div>
                         <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                           <FaStar className="text-amber-400" />
-                          {product.rating.toFixed(1)} · {product.sold} đã bán
+                          {product.rating.toFixed(1)} · {product.sold} sold
                         </div>
                       </div>
                     </div>
