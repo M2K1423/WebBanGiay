@@ -3,6 +3,8 @@ import Link from "next/link";
 import { FaChevronRight, FaStar, FaFilter } from "react-icons/fa6";
 import { getAllProducts, getProductImage } from "@/lib/products";
 
+const PRODUCTS_PER_PAGE = 9;
+
 export const metadata: Metadata = {
   title: "Tất cả sản phẩm | myshoes.vn",
   description: "Khám phá bộ sưu tập giày Nike, Adidas, Puma chính hãng tại myshoes.vn"
@@ -14,10 +16,10 @@ const CATEGORIES = ["Running", "Lifestyle", "Court", "Trail", "Training", "Casua
 export default async function ProductsPage({
   searchParams
 }: {
-  searchParams: Promise<{ brand?: string; category?: string; sort?: string; q?: string }>;
+  searchParams: Promise<{ brand?: string; category?: string; sort?: string; q?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const { brand, category, sort, q } = params;
+  const { brand, category, sort, q, page } = params;
 
   let products = await getAllProducts();
 
@@ -52,6 +54,14 @@ export default async function ProductsPage({
     products = [...products].sort((a, b) => b.sold - a.sold);
   }
 
+  const currentPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
+  const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * PRODUCTS_PER_PAGE;
+  const visibleProducts = products.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+  const startItem = products.length === 0 ? 0 : startIndex + 1;
+  const endItem = Math.min(startIndex + PRODUCTS_PER_PAGE, products.length);
+
   const buildUrl = (key: string, value: string) => {
     const p = new URLSearchParams();
     if (brand && key !== "brand") p.set("brand", brand);
@@ -60,6 +70,16 @@ export default async function ProductsPage({
     if (q && key !== "q") p.set("q", q);
     if (value) p.set(key, value);
     return `/products?${p.toString()}`;
+  };
+
+  const buildPageUrl = (pageNumber: number) => {
+    const p = new URLSearchParams();
+    if (brand) p.set("brand", brand);
+    if (category) p.set("category", category);
+    if (sort) p.set("sort", sort);
+    if (q) p.set("q", q);
+    if (pageNumber > 1) p.set("page", String(pageNumber));
+    return `/products${p.toString() ? `?${p.toString()}` : ""}`;
   };
 
   const clearFilter = () => {
@@ -206,7 +226,7 @@ export default async function ProductsPage({
               </div>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {products.map((product) => {
+                {visibleProducts.map((product) => {
                   const img = getProductImage(product);
                   return (
                     <Link
@@ -264,6 +284,48 @@ export default async function ProductsPage({
                     </Link>
                   );
                 })}
+              </div>
+            )}
+
+            {products.length > 0 && totalPages > 1 && (
+              <div className="mt-8 flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <Link
+                    href={buildPageUrl(safePage - 1)}
+                    aria-disabled={safePage === 1}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      safePage === 1
+                        ? "pointer-events-none border-slate-200 bg-slate-50 text-slate-300"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    &lsaquo;
+                  </Link>
+                  {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                    <Link
+                      key={pageNumber}
+                      href={buildPageUrl(pageNumber)}
+                      className={`min-w-10 rounded-xl px-3 py-2 text-sm font-semibold text-center transition-colors ${
+                        pageNumber === safePage
+                          ? "bg-[#0d3a6b] text-white"
+                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {pageNumber}
+                    </Link>
+                  ))}
+                  <Link
+                    href={buildPageUrl(safePage + 1)}
+                    aria-disabled={safePage === totalPages}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      safePage === totalPages
+                        ? "pointer-events-none border-slate-200 bg-slate-50 text-slate-300"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    &rsaquo;
+                  </Link>
+                </div>
               </div>
             )}
           </div>

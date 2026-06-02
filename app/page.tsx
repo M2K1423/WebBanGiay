@@ -56,45 +56,104 @@ function getProductImage(product: { imageUrls: string[] }) {
   return product.imageUrls[0] ?? null;
 }
 
+function buildHeroBackground(imageUrl: string | null, overlay: string) {
+  return imageUrl
+    ? {
+        backgroundImage: `linear-gradient(${overlay}), url(${imageUrl})`
+      }
+    : {
+        backgroundImage: `linear-gradient(${overlay})`
+      };
+}
+
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProducts();
   const flashSaleProducts = featuredProducts.filter((product) => product.productType === "Flash Sale").slice(0, 4);
+  const flashSaleCarousel = flashSaleProducts.length > 0 ? [...flashSaleProducts, ...flashSaleProducts] : [];
+
+  const heroImages = [
+    "https://i.pinimg.com/736x/de/1d/52/de1d520ea130ebaa7e850010c1011eab.jpg",
+    "https://i.pinimg.com/736x/d3/dd/e2/d3dde2f143f8eb197c31f15ee28af988.jpg",
+    "https://i.pinimg.com/736x/9c/a6/06/9ca606ae0fbeb8a276a14c843ae07735.jpg"
+  ];
 
   return (
     <main className="bg-[#f5f7fb]">
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d3a6b] via-[#13519b] to-[#1e6ad1] p-10 text-white">
-            <div className="max-w-md">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">Myshoes.vn</p>
-              <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl">
+        <div className="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
+          <div
+            className="relative overflow-hidden rounded-[2rem] border border-white/30 p-8 text-white shadow-[0_30px_100px_rgba(13,58,107,0.22)] sm:p-10"
+            style={buildHeroBackground(heroImages[0], "135deg, rgba(12, 41, 82, 0.80) 0%, rgba(12, 71, 141, 0.55) 52%, rgba(44, 122, 255, 0.35) 100%")}
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(255,183,3,0.15),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.08),transparent_45%)]" />
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/12 to-transparent" />
+            <div className="absolute right-4 top-4 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-white/80 backdrop-blur-md">
+              Myshoes.vn / 2026
+            </div>
+            <div className="relative z-10 max-w-[34rem] pt-10 sm:pt-8 lg:pt-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white/75">Premium Sneaker Store</p>
+              <h1 className="mt-4 text-4xl font-semibold leading-[0.94] tracking-[-0.06em] sm:text-5xl lg:text-[4.3rem]">
                 Authentic Nike, Adidas, Puma Shoes
               </h1>
-              <p className="mt-4 text-sm text-white/80">
-                Fresh drops, fast delivery, easy swaps.
+              <p className="mt-5 max-w-lg text-sm leading-7 text-white/82 sm:text-base">
+                Fresh drops, fast delivery, easy swaps. Discover a sharper selection with a cleaner shopping flow.
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <a className="inline-flex items-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-[#0d3a6b]" href="#flash-sale">
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a className="inline-flex items-center rounded-full bg-[#ffb703] px-5 py-2.5 text-sm font-semibold text-[#1b1202] shadow-lg shadow-black/10 transition-transform hover:-translate-y-0.5" href="#flash-sale">
                   Grab flash sale
                 </a>
-                <a className="inline-flex items-center rounded-full border border-white/40 px-5 py-2 text-sm font-semibold text-white" href="#new-arrivals">
+                <a className="inline-flex items-center rounded-full border border-white/35 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-transform hover:-translate-y-0.5" href="#new-arrivals">
                   See new arrivals
                 </a>
               </div>
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                {[
+                  { label: "Authentic", value: "100%" },
+                  { label: "Dispatch", value: "24h" },
+                  { label: "Exchange", value: "Easy" }
+                ].map((stat) => (
+                  <div key={stat.label} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md">
+                    <div className="text-xl font-semibold text-white">{stat.value}</div>
+                    <div className="mt-1 text-xs uppercase tracking-[0.22em] text-white/65">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="absolute -right-10 top-1/2 h-56 w-56 -translate-y-1/2 rounded-full bg-white/10" />
+            <div className="absolute -right-10 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-white/12 blur-2xl" />
           </div>
 
-          <div className="grid gap-4">
-            <div className="rounded-3xl bg-gradient-to-br from-[#f1b232] via-[#f7c45c] to-[#f7d48b] p-8 text-[#1f2a44]">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em]">Flash Sale</p>
-              <h2 className="mt-3 text-xl font-semibold">Up to 50% Off</h2>
-              <p className="mt-2 text-sm">Deals go quick. Dont miss out.</p>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <div
+              className="relative min-h-[280px] overflow-hidden rounded-[2rem] border border-white/40 p-8 text-[#1f2a44] shadow-[0_24px_70px_rgba(251,133,0,0.14)]"
+              style={buildHeroBackground(heroImages[1], "135deg, rgba(234, 173, 38, 0.80) 0%, rgba(246, 205, 108, 0.70) 52%, rgba(255, 228, 170, 0.54) 100%")}
+            >
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02))]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.30),transparent_38%)]" />
+              <div className="relative z-10 flex h-full flex-col justify-between">
+                <div className="inline-flex w-fit rounded-full bg-white/70 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.26em] text-[#1f2a44] backdrop-blur-md">
+                  Flash Sale
+                </div>
+                <div className="max-w-[15rem]">
+                  <h2 className="text-2xl font-semibold leading-tight">Up to 50% Off</h2>
+                  <p className="mt-2 text-sm text-[#1f2a44]/80">Deals go quick. Dont miss out.</p>
+                </div>
+              </div>
             </div>
-            <div className="rounded-3xl bg-gradient-to-br from-[#e6eefc] via-[#d8e7ff] to-[#c8dcff] p-8 text-[#1f2a44]">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em]">Sport</p>
-              <h2 className="mt-3 text-xl font-semibold">Running Shoes That Feel Great</h2>
-              <p className="mt-2 text-sm">Comfy, light, and ready to go.</p>
+            <div
+              className="relative min-h-[280px] overflow-hidden rounded-[2rem] border border-white/40 p-8 text-[#1f2a44] shadow-[0_24px_70px_rgba(64,95,160,0.14)]"
+              style={buildHeroBackground(heroImages[2], "135deg, rgba(224, 233, 250, 0.90) 0%, rgba(202, 222, 255, 0.84) 52%, rgba(177, 205, 247, 0.72) 100%")}
+            >
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.24),rgba(255,255,255,0.06))]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.42),transparent_34%)]" />
+              <div className="relative z-10 flex h-full flex-col justify-between">
+                <div className="inline-flex w-fit rounded-full bg-[#0d3a6b]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.26em] text-[#0d3a6b] backdrop-blur-md">
+                  Sport
+                </div>
+                <div className="max-w-[15rem]">
+                  <h2 className="text-2xl font-semibold leading-tight">Running Shoes That Feel Great</h2>
+                  <p className="mt-2 text-sm text-[#1f2a44]/80">Comfy, light, and ready to go.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -131,36 +190,42 @@ export default async function HomePage() {
           </a>
         </div>
 
-        <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {flashSaleProducts.map((item) => (
-            <Link key={item.id} href={`/products/${item.id}`} className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-              <div className="relative h-44 bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
-                {getProductImage(item) ? (
-                  <img alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={getProductImage(item) ?? undefined} />
-                ) : null}
-                <span className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
-                  {item.discount}
-                </span>
-                <span className="absolute bottom-4 left-4 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-[#1b1202]">
-                  {item.promotion}
-                </span>
-              </div>
-              <div className="p-4">
-                <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
-                  <span>{item.brand}</span>
-                  <span>{item.category}</span>
+        <div className="flash-sale-viewport mt-6 rounded-[2rem]">
+          <div className="flash-sale-track py-1">
+            {flashSaleCarousel.map((item, index) => (
+              <Link
+                key={`${item.id}-${index}`}
+                href={`/products/${item.id}`}
+                className="flash-sale-card group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="relative h-44 bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
+                  {getProductImage(item) ? (
+                    <img alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={getProductImage(item) ?? undefined} />
+                  ) : null}
+                  <span className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+                    {item.discount}
+                  </span>
+                  <span className="absolute bottom-4 left-4 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-[#1b1202]">
+                    {item.promotion}
+                  </span>
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{item.name}</h3>
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="text-base font-semibold text-rose-600">{item.price}</span>
-                  <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
+                <div className="p-4">
+                  <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+                    <span>{item.brand}</span>
+                    <span>{item.category}</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{item.name}</h3>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-base font-semibold text-rose-600">{item.price}</span>
+                    <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <FaStar className="text-amber-400" /> {item.rating.toFixed(1)} | {item.sold} sold
+                  </div>
                 </div>
-                <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-                  <FaStar className="text-amber-400" /> {item.rating.toFixed(1)} | {item.sold} sold
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
