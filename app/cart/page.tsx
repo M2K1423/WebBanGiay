@@ -27,7 +27,7 @@ export default function CartPage() {
             </p>
             <Link 
               href="/products" 
-              className="mt-8 rounded-full bg-[#0d3a6b] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5"
+              className="mt-8 rounded-full bg-[#0d3a6b] px-8 py-3.5 text-sm font-semibold !text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5 hover:!text-white"
             >
               Continue Shopping
             </Link>
