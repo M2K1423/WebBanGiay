@@ -8,8 +8,8 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   FaBagShopping,
   FaBars,
+  FaBell,
   FaBolt,
-  FaChevronDown,
   FaMagnifyingGlass,
   FaNewspaper,
   FaPersonRunning,
@@ -20,14 +20,46 @@ import {
 import { SiAdidas, SiNike, SiPuma } from "react-icons/si";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { useCart } from "@/features/cart/CartContext";
+import { getApiBaseUrl } from "@/features/auth/utils";
+
+type ProductNotification = {
+  id: string;
+  name: string;
+  brand: string;
+  price: string;
+  imageUrl: string | null;
+  message: string;
+  createdAt: string;
+};
+
+type RealtimeSocket = {
+  on: (event: "product.created", callback: (notification: ProductNotification) => void) => void;
+  disconnect: () => void;
+};
+
+declare global {
+  interface Window {
+    io?: (url: string, options?: { transports?: string[] }) => RealtimeSocket;
+  }
+}
+
+function getRealtimeBaseUrl() {
+  return process.env.NEXT_PUBLIC_REALTIME_URL ?? getApiBaseUrl().replace(/\/api\/?$/, "");
+}
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<ProductNotification[]>([]);
+  const [latestNotification, setLatestNotification] = useState<ProductNotification | null>(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [user, setUser] = useState<User | null>(null);
   const [signOutLoading, setSignOutLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const notificationMenuRef = useRef<HTMLDivElement | null>(null);
+  const notificationToastTimerRef = useRef<number | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -45,12 +77,14 @@ export default function Header() {
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
-      if (!accountMenuRef.current) {
-        return;
+      const target = event.target as Node;
+
+      if (accountMenuRef.current && !accountMenuRef.current.contains(target)) {
+        setIsAccountMenuOpen(false);
       }
 
-      if (!accountMenuRef.current.contains(event.target as Node)) {
-        setIsAccountMenuOpen(false);
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(target)) {
+        setIsNotificationMenuOpen(false);
       }
     };
 
@@ -65,6 +99,7 @@ export default function Header() {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsAccountMenuOpen(false);
+        setIsNotificationMenuOpen(false);
       }
     };
 
@@ -78,6 +113,93 @@ export default function Header() {
   useEffect(() => {
     setSearchTerm(searchParams.get("q") ?? "");
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/notifications?limit=10`);
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!cancelled && Array.isArray(data)) {
+          setNotifications(data as ProductNotification[]);
+          setUnreadNotificationCount(data.length);
+        }
+      } catch {
+        // Realtime still works when notification history is temporarily unavailable.
+      }
+    };
+
+    void fetchNotifications();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let socket: RealtimeSocket | null = null;
+    let cancelled = false;
+    const realtimeBaseUrl = getRealtimeBaseUrl();
+
+    const handleProductCreated = (notification: ProductNotification) => {
+      setNotifications((current) => [notification, ...current].slice(0, 10));
+      setUnreadNotificationCount((current) => current + 1);
+      setLatestNotification(notification);
+
+      if (notificationToastTimerRef.current) {
+        window.clearTimeout(notificationToastTimerRef.current);
+      }
+
+      notificationToastTimerRef.current = window.setTimeout(() => {
+        setLatestNotification(null);
+      }, 5000);
+    };
+
+    const connect = () => {
+      if (cancelled || !window.io) {
+        return;
+      }
+
+      socket = window.io(`${realtimeBaseUrl}/notifications`, {
+        transports: ["websocket", "polling"]
+      });
+
+      socket.on("product.created", handleProductCreated);
+    };
+
+    if (window.io) {
+      connect();
+    } else {
+      const existingScript = document.querySelector<HTMLScriptElement>("script[data-socket-io-client='true']");
+
+      if (existingScript) {
+        existingScript.addEventListener("load", connect, { once: true });
+      } else {
+        const script = document.createElement("script");
+        script.src = `${realtimeBaseUrl}/socket.io/socket.io.js`;
+        script.async = true;
+        script.dataset.socketIoClient = "true";
+        script.addEventListener("load", connect, { once: true });
+        document.body.appendChild(script);
+      }
+    }
+
+    return () => {
+      cancelled = true;
+      socket?.disconnect();
+
+      if (notificationToastTimerRef.current) {
+        window.clearTimeout(notificationToastTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleSignOut = useCallback(async () => {
     const auth = getFirebaseAuth();
@@ -98,6 +220,11 @@ export default function Header() {
 
   const handleToggleAccountMenu = useCallback(() => {
     setIsAccountMenuOpen((current) => !current);
+  }, []);
+
+  const handleToggleNotificationMenu = useCallback(() => {
+    setIsNotificationMenuOpen((current) => !current);
+    setUnreadNotificationCount(0);
   }, []);
 
   const handleLoginClick = useCallback(() => {
@@ -149,13 +276,86 @@ export default function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-4">
+          <div ref={notificationMenuRef} className="relative">
+            <button
+              type="button"
+              onClick={handleToggleNotificationMenu}
+              className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-lg transition-colors hover:bg-[#0a2747]"
+              aria-label="Product notifications"
+              aria-expanded={isNotificationMenuOpen}
+              aria-haspopup="menu"
+            >
+              <FaBell />
+              {unreadNotificationCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">
+                  {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                </span>
+              )}
+            </button>
+
+            {isNotificationMenuOpen ? (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-3 w-96 overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-2xl shadow-slate-950/30"
+              >
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Notifications</p>
+                    <p className="mt-1 text-sm font-bold text-slate-950">New product updates</p>
+                  </div>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+                    Live
+                  </span>
+                </div>
+
+                <div className="max-h-96 overflow-y-auto p-2">
+                  {notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      <Link
+                        key={`${notification.id}-${notification.createdAt}`}
+                        href={`/products/${notification.id}`}
+                        className="flex gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50"
+                        role="menuitem"
+                        onClick={() => setIsNotificationMenuOpen(false)}
+                      >
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
+                          {notification.imageUrl ? (
+                            <img src={notification.imageUrl} alt={notification.name} className="h-full w-full object-cover" />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-slate-950">New product available</p>
+                          <p className="mt-0.5 truncate text-sm font-semibold text-[#0d3a6b]">
+                            {notification.name}
+                          </p>
+                          <p className="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
+                            <span className="truncate">{notification.brand || "Myshoes"}</span>
+                            <span className="shrink-0 font-bold text-rose-600">{notification.price}</span>
+                          </p>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="px-4 py-8 text-center">
+                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                        <FaBell />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-900">No notifications yet</p>
+                      <p className="mt-1 text-xs text-slate-500">New product alerts will appear here.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
           <div ref={accountMenuRef} className="relative">
             {user ? (
               <button
                 type="button"
                 onClick={handleToggleAccountMenu}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-lg transition-colors hover:bg-[#0a2747]"
-                aria-label="Mo menu tai khoan"
+                aria-label="Account menu"
                 aria-expanded={isAccountMenuOpen}
                 aria-haspopup="menu"
               >
@@ -193,7 +393,7 @@ export default function Header() {
                     role="menuitem"
                   >
                     <FaUser className="text-base" />
-                    {signOutLoading ? "Dang xuat..." : "Dang xuat"}
+                    {signOutLoading ? "Signing out..." : "Sign out"}
                   </button>
                 </div>
               </div>
@@ -250,6 +450,28 @@ export default function Header() {
           </Link>
         </div>
       </nav>
+
+      {latestNotification ? (
+        <Link
+          href={`/products/${latestNotification.id}`}
+          className="fixed right-5 top-36 z-[60] flex w-[340px] gap-3 rounded-2xl border border-emerald-100 bg-white p-4 text-slate-900 shadow-2xl shadow-slate-900/15 animate-fade-in-up"
+          onClick={() => setLatestNotification(null)}
+        >
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
+            {latestNotification.imageUrl ? (
+              <img src={latestNotification.imageUrl} alt={latestNotification.name} className="h-full w-full object-cover" />
+            ) : null}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-emerald-600">New product available</p>
+            <p className="mt-1 truncate text-sm font-semibold text-slate-950">{latestNotification.name}</p>
+            <p className="mt-0.5 flex items-center justify-between gap-3 text-xs text-slate-500">
+              <span className="truncate">{latestNotification.brand || "Myshoes"}</span>
+              <span className="shrink-0 font-bold text-rose-600">{latestNotification.price}</span>
+            </p>
+          </div>
+        </Link>
+      ) : null}
     </header>
   );
 }
