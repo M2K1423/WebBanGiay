@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FaChevronRight, FaLocationDot, FaMoneyBillWave, FaShieldHalved } from "react-icons/fa6";
+import { FaCheck, FaChevronRight, FaLocationDot, FaMoneyBillWave, FaShieldHalved } from "react-icons/fa6";
 import { useCart } from "@/features/cart/CartContext";
 import { onAuthStateChanged } from "firebase/auth";
 import { getApiBaseUrl } from "@/features/auth/utils";
@@ -17,11 +17,17 @@ function formatPrice(price: number): string {
   return price.toLocaleString("vi-VN") + "đ";
 }
 
+function createOrderNumber() {
+  return `MS-${Date.now().toString().slice(-6)}`;
+}
+
 export default function CheckoutPage() {
   const { items, total, count, clearCart } = useCart();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [customerId, setCustomerId] = useState<string | null>(null);
 
   // Form state
@@ -36,10 +42,10 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (mounted && items.length === 0) {
+    if (mounted && items.length === 0 && !orderPlaced) {
       router.push("/cart");
     }
-  }, [items.length, mounted, router]);
+  }, [items.length, mounted, orderPlaced, router]);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -93,8 +99,33 @@ export default function CheckoutPage() {
         throw new Error("Failed to create order");
       }
 
-      clearCart();
-      router.push("/checkout/success");
+      const createdOrder = await response.json().catch(() => null);
+      const orderNumber =
+        createdOrder?.orderNumber ??
+        createdOrder?.orderId ??
+        createdOrder?.id ??
+        createdOrder?._id ??
+        createOrderNumber();
+
+      sessionStorage.setItem(
+        "myshoes_last_order",
+        JSON.stringify({
+          orderNumber,
+          orderDate: new Date().toISOString(),
+          items,
+          total,
+          paymentMethod: formData.paymentMethod,
+          email: formData.email
+        })
+      );
+
+      setOrderPlaced(true);
+      setShowOrderSuccess(true);
+
+      window.setTimeout(() => {
+        clearCart();
+        router.push("/checkout/success");
+      }, 900);
     } catch {
       alert("Failed to create order. Please try again.");
     } finally {
@@ -104,6 +135,19 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-[#f5f7fb] pb-24">
+      {showOrderSuccess && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed right-5 top-48 z-50 flex min-w-[270px] items-center gap-4 rounded-2xl border border-emerald-200 bg-white px-5 py-4 text-base font-semibold text-slate-900 shadow-2xl shadow-emerald-900/10 ring-1 ring-emerald-100 animate-fade-in-up sm:right-8"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 ring-8 ring-emerald-50">
+            <FaCheck className="text-lg" />
+          </span>
+          <span>Order Successfully</span>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
@@ -117,9 +161,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 mt-8 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-semibold text-slate-900 mb-6">Checkout</h1>
-
+      <div className="mx-auto max-w-7xl px-4 mt-5 sm:px-6 lg:px-8">
         <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[1fr_450px]">
           {/* Checkout Form */}
           <div className="space-y-6">
@@ -129,9 +171,9 @@ export default function CheckoutPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0d3a6b]/10 text-[#0d3a6b]">
                   <FaLocationDot />
                 </div>
-                <h2 className="text-lg font-semibold text-slate-900">Shipping Information</h2>
+                <h2 className="text-xl font-bold text-slate-950">Shipping Information</h2>
               </div>
-              
+
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -219,17 +261,15 @@ export default function CheckoutPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                   <FaMoneyBillWave />
                 </div>
-                <h2 className="text-lg font-semibold text-slate-900">Payment Method</h2>
+                <h2 className="text-xl font-bold text-slate-950">Payment Method</h2>
               </div>
 
               <div className="space-y-3">
-                <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-colors ${
-                  formData.paymentMethod === "cod" ? "border-[#0d3a6b] bg-[#0d3a6b]/5" : "border-slate-200 hover:border-slate-300"
-                }`}>
+                <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-colors ${formData.paymentMethod === "cod" ? "border-[#0d3a6b] bg-[#0d3a6b]/5" : "border-slate-200 hover:border-slate-300"
+                  }`}>
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                      formData.paymentMethod === "cod" ? "border-[#0d3a6b]" : "border-slate-300"
-                    }`}>
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${formData.paymentMethod === "cod" ? "border-[#0d3a6b]" : "border-slate-300"
+                      }`}>
                       {formData.paymentMethod === "cod" && <div className="h-3 w-3 rounded-full bg-[#0d3a6b]" />}
                     </div>
                     <div>
@@ -240,13 +280,11 @@ export default function CheckoutPage() {
                   <div className="h-8 w-12 rounded bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">COD</div>
                 </label>
 
-                <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-colors ${
-                  formData.paymentMethod === "vnpay" ? "border-[#0d3a6b] bg-[#0d3a6b]/5" : "border-slate-200 hover:border-slate-300"
-                }`}>
+                <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-colors ${formData.paymentMethod === "vnpay" ? "border-[#0d3a6b] bg-[#0d3a6b]/5" : "border-slate-200 hover:border-slate-300"
+                  }`}>
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                      formData.paymentMethod === "vnpay" ? "border-[#0d3a6b]" : "border-slate-300"
-                    }`}>
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${formData.paymentMethod === "vnpay" ? "border-[#0d3a6b]" : "border-slate-300"
+                      }`}>
                       {formData.paymentMethod === "vnpay" && <div className="h-3 w-3 rounded-full bg-[#0d3a6b]" />}
                     </div>
                     <div>
@@ -262,8 +300,8 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <div>
             <div className="sticky top-24 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6">Your Order</h2>
-              
+              <h2 className="text-xl font-bold text-slate-950 mb-6">Your Order</h2>
+
               <div className="mb-6 space-y-4 max-h-[300px] overflow-y-auto pr-2">
                 {items.map((item) => (
                   <div key={`${item.productId}__${item.size}__${item.color}`} className="flex gap-3">
@@ -293,7 +331,7 @@ export default function CheckoutPage() {
                   <span>Shipping</span>
                   <span className="font-medium text-[#0d3a6b] font-semibold">Free</span>
                 </div>
-                
+
                 <div className="border-t border-dashed border-slate-200 pt-4 mt-2">
                   <div className="flex items-end justify-between">
                     <span className="font-semibold text-slate-900 text-base">Total</span>
@@ -304,10 +342,10 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-8 w-full rounded-full bg-[#0d3a6b] py-4 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0 flex justify-center items-center gap-2"
+                className="mt-8 w-full rounded-full bg-[#0d3a6b] py-4 text-base font-bold text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0 flex justify-center items-center gap-2"
               >
                 {isSubmitting ? (
                   <>Processing...</>
