@@ -1,10 +1,9 @@
 "use client";
 
-import { createContext, useContext, useCallback, useEffect, useState, useRef, type ReactNode } from "react";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { getApiBaseUrl } from "@/features/auth/utils";
-
+import { getFirebaseAuth } from "@/lib/firebase";
 
 export type CartItem = {
   productId: string;
@@ -38,6 +37,7 @@ function parsePrice(price: string): number {
 
 function loadCart(): CartItem[] {
   if (typeof window === "undefined") return [];
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as CartItem[]) : [];
@@ -70,14 +70,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (mounted) saveCart(items);
   }, [items, mounted]);
 
-  // Listen to Auth State
   useEffect(() => {
     const auth = getFirebaseAuth();
     if (!auth) return;
     return onAuthStateChanged(auth, setUser);
   }, []);
 
-  // Fetch and Sync Cart on Login
   useEffect(() => {
     if (!mounted) return;
 
@@ -94,6 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         const apiBaseUrl = getApiBaseUrl();
         const res = await fetch(`${apiBaseUrl}/cart/${user.uid}`);
+
         if (!res.ok) return;
 
         const backendCart = await res.json();
@@ -101,43 +100,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         setItems((prevLocalItems) => {
           const merged = [...backendItems];
+          const mergedKeys = new Set(merged.map(itemKey));
 
           prevLocalItems.forEach((localItem) => {
-            const matchIdx = merged.findIndex(
-              (i) => i.productId === localItem.productId && i.size === localItem.size && i.color === localItem.color
-            );
+            const key = itemKey(localItem);
 
-            if (matchIdx > -1) {
-              merged[matchIdx].quantity = (merged[matchIdx].quantity || 0) + (localItem.quantity || 1);
-            } else {
+            if (!mergedKeys.has(key)) {
               merged.push(localItem);
+              mergedKeys.add(key);
             }
           });
 
-          // Sync merged items to backend
           void fetch(`${apiBaseUrl}/cart/${user.uid}`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
             },
             body: JSON.stringify({ items: merged })
-          }).catch((err) => console.error("Lỗi đồng bộ giỏ hàng lên backend:", err));
+          }).catch((err) => console.warn("Cart backend sync failed:", err));
 
           return merged;
         });
 
         syncedUserUidRef.current = user.uid;
       } catch (err) {
-        console.error("Lỗi đồng bộ giỏ hàng khi đăng nhập:", err);
+        console.warn("Cart backend sync on login failed:", err);
       }
     };
 
     void syncCartOnLogin();
   }, [user, mounted]);
 
-  // Helper to sync to backend
   const syncToBackend = useCallback(async (currentItems: CartItem[], activeUser: User | null) => {
     if (!activeUser) return;
+
     try {
       const apiBaseUrl = getApiBaseUrl();
       await fetch(`${apiBaseUrl}/cart/${activeUser.uid}`, {
@@ -148,26 +144,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ items: currentItems })
       });
     } catch (err) {
-      console.error("Lỗi lưu giỏ hàng lên backend:", err);
+      console.warn("Cart backend save failed:", err);
     }
   }, []);
 
-  const count = items.reduce((sum, i) => sum + i.quantity, 0);
-  const total = items.reduce((sum, i) => sum + parsePrice(i.price) * i.quantity, 0);
+  const count = items.reduce((sum, item) => sum + item.quantity, 0);
+  const total = items.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
 
   const addItem = useCallback(
     (item: Omit<CartItem, "quantity">, quantity = 1) => {
       setItems((prev) => {
         const key = itemKey(item);
-        const existing = prev.find((i) => itemKey(i) === key);
-        let updated: CartItem[];
-        if (existing) {
-          updated = prev.map((i) =>
-            itemKey(i) === key ? { ...i, quantity: i.quantity + quantity } : i
-          );
-        } else {
-          updated = [...prev, { ...item, quantity }];
-        }
+        const existing = prev.find((currentItem) => itemKey(currentItem) === key);
+        const updated = existing
+          ? prev.map((currentItem) =>
+              itemKey(currentItem) === key
+                ? { ...currentItem, quantity: currentItem.quantity + quantity }
+                : currentItem
+            )
+          : [...prev, { ...item, quantity }];
+
         void syncToBackend(updated, user);
         return updated;
       });
@@ -178,7 +174,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeItem = useCallback(
     (productId: string, size: string, color: string) => {
       setItems((prev) => {
-        const updated = prev.filter((i) => itemKey(i) !== `${productId}__${size}__${color}`);
+        const updated = prev.filter((item) => itemKey(item) !== `${productId}__${size}__${color}`);
         void syncToBackend(updated, user);
         return updated;
       });
@@ -192,11 +188,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeItem(productId, size, color);
         return;
       }
+
       setItems((prev) => {
-        const updated = prev.map((i) =>
-          itemKey(i) === `${productId}__${size}__${color}`
-            ? { ...i, quantity }
-            : i
+        const updated = prev.map((item) =>
+          itemKey(item) === `${productId}__${size}__${color}` ? { ...item, quantity } : item
         );
         void syncToBackend(updated, user);
         return updated;
@@ -207,18 +202,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => {
     setItems([]);
+
     if (user) {
       const apiBaseUrl = getApiBaseUrl();
       void fetch(`${apiBaseUrl}/cart/${user.uid}`, {
         method: "DELETE"
-      }).catch((err) => console.error("Lỗi xóa giỏ hàng trên backend:", err));
+      }).catch((err) => console.warn("Cart backend clear failed:", err));
     }
   }, [user]);
 
   return (
-    <CartContext.Provider
-      value={{ items, count, total, addItem, removeItem, updateQuantity, clearCart }}
-    >
+    <CartContext.Provider value={{ items, count, total, addItem, removeItem, updateQuantity, clearCart }}>
       {children}
     </CartContext.Provider>
   );
