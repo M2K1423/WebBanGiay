@@ -1,0 +1,1 @@
+Initial roadmap for web-shoes client. Planned views: Home, Category, Details, Checkout, and Admin.
