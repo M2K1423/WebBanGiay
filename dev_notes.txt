@@ -1,1 +1,2 @@
 Initial roadmap for web-shoes client. Planned views: Home, Category, Details, Checkout, and Admin.
+Added CSS variable tokens for dark blue colors, margins, and transition-all animations.
