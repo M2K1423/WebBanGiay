@@ -75,7 +75,6 @@ export default function CheckoutPage() {
     const payload = {
       items,
       total,
-      status: "pending",
       shippingAddress: {
         fullName: formData.fullName,
         phone: formData.phone,
@@ -87,11 +86,20 @@ export default function CheckoutPage() {
     };
 
     try {
+      const auth = getFirebaseAuth();
+      const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
+      
+      const headers: any = {
+        "Content-Type": "application/json"
+      };
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${getApiBaseUrl()}/orders/user/${userId}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers,
         body: JSON.stringify(payload)
       });
 
