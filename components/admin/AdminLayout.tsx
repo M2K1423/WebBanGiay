@@ -26,7 +26,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
 
       try {
-        const res = await fetch(`${getApiBaseUrl()}/users/${user.uid}`);
+        const token = await user.getIdToken();
+        const res = await fetch(`${getApiBaseUrl()}/users/${user.uid}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
         if (res.ok) {
           const data = await res.json();
           if (data && data.isAdmin) {

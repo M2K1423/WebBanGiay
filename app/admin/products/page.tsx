@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaPenToSquare, FaPlus, FaTrashCan, FaXmark } from "react-icons/fa6";
 import { getApiBaseUrl } from "@/features/auth/utils";
+import { getFirebaseAuth } from "@/lib/firebase";
 
 type Product = {
   id: string;
@@ -143,7 +144,17 @@ export default function AdminProductsPage() {
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/products/${id}`, { method: "DELETE" });
+      const auth = getFirebaseAuth();
+      const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
+      const headers: any = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${apiBaseUrl}/products/${id}`, {
+        method: "DELETE",
+        headers
+      });
 
       if (!response.ok) {
         alert("Xóa thất bại");
@@ -178,11 +189,18 @@ export default function AdminProductsPage() {
     };
 
     try {
+      const auth = getFirebaseAuth();
+      const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(
         editingId ? `${apiBaseUrl}/products/${editingId}` : `${apiBaseUrl}/products`,
         {
           method: editingId ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(payload)
         }
       );

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaEye, FaMagnifyingGlass, FaXmark } from "react-icons/fa6";
 import { getApiBaseUrl } from "@/features/auth/utils";
+import { getFirebaseAuth } from "@/lib/firebase";
 
 type OrderItem = {
   productId: string;
@@ -65,7 +66,13 @@ export default function AdminOrdersPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/orders/all`);
+      const auth = getFirebaseAuth();
+      const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
+      const headers: any = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      const response = await fetch(`${apiBaseUrl}/orders/all`, { headers });
       const data = await response.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch {
@@ -129,9 +136,15 @@ export default function AdminOrdersPage() {
     setSavingOrderId(orderId);
 
     try {
+      const auth = getFirebaseAuth();
+      const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
       const response = await fetch(`${apiBaseUrl}/orders/${orderId}/status`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ status: newStatus })
       });
 

@@ -3,19 +3,31 @@
 import { useEffect, useState } from "react";
 import { FaPlus, FaPenToSquare, FaTrashCan } from "react-icons/fa6";
 import { getApiBaseUrl } from "@/features/auth/utils";
+import { getFirebaseAuth } from "@/lib/firebase";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${getApiBaseUrl()}/users`)
-      .then(res => res.json())
-      .then(data => {
-        setUsers(data);
+    const fetchUsers = async () => {
+      try {
+        const auth = getFirebaseAuth();
+        const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
+        const headers: any = {};
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        const res = await fetch(`${getApiBaseUrl()}/users`, { headers });
+        const data = await res.json();
+        setUsers(Array.isArray(data) ? data : []);
+      } catch {
+        setUsers([]);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+    void fetchUsers();
   }, []);
 
   return (
@@ -58,7 +70,10 @@ export default function AdminUsersPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 font-medium text-slate-900">{user.displayName || "-"}</td>
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-slate-900">{user.displayName || "-"}</div>
+                      <div className="text-[10px] text-slate-400 font-mono select-all mt-0.5" title="Click đúp để chọn và copy UID">{user.uid}</div>
+                    </td>
                     <td className="px-6 py-4">{user.email || "-"}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600 uppercase">
