@@ -91,7 +91,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const syncCartOnLogin = async () => {
       try {
         const apiBaseUrl = getApiBaseUrl();
-        const res = await fetch(`${apiBaseUrl}/cart/${user.uid}`);
+        const token = await user.getIdToken();
+        const res = await fetch(`${apiBaseUrl}/cart/${user.uid}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
 
         if (!res.ok) return;
 
@@ -114,7 +119,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           void fetch(`${apiBaseUrl}/cart/${user.uid}`, {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({ items: merged })
           }).catch((err) => console.warn("Cart backend sync failed:", err));
@@ -136,10 +142,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     try {
       const apiBaseUrl = getApiBaseUrl();
+      const token = await activeUser.getIdToken();
       await fetch(`${apiBaseUrl}/cart/${activeUser.uid}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ items: currentItems })
       });
@@ -205,9 +213,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     if (user) {
       const apiBaseUrl = getApiBaseUrl();
-      void fetch(`${apiBaseUrl}/cart/${user.uid}`, {
-        method: "DELETE"
-      }).catch((err) => console.warn("Cart backend clear failed:", err));
+      void (async () => {
+        try {
+          const token = await user.getIdToken();
+          await fetch(`${apiBaseUrl}/cart/${user.uid}`, {
+            method: "DELETE",
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+        } catch (err) {
+          console.warn("Cart backend clear failed:", err);
+        }
+      })();
     }
   }, [user]);
 

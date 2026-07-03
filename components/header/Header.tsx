@@ -55,6 +55,7 @@ export default function Header() {
   const [latestNotification, setLatestNotification] = useState<ProductNotification | null>(null);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [signOutLoading, setSignOutLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
@@ -72,7 +73,29 @@ export default function Header() {
       return;
     }
 
-    return onAuthStateChanged(auth, setUser);
+    return onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdToken();
+          const res = await fetch(`${getApiBaseUrl()}/users/${firebaseUser.uid}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setIsAdmin(!!data?.isAdmin);
+          } else {
+            setIsAdmin(false);
+          }
+        } catch {
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -381,7 +404,18 @@ export default function Header() {
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Logged in</p>
                   <p className="mt-1 break-words text-sm font-semibold">{user.email ?? "Firebase user"}</p>
                 </div>
-                <div className="p-2">
+                <div className="p-2 space-y-1">
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      role="menuitem"
+                      onClick={() => setIsAccountMenuOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      <FaUser className="text-base text-slate-500" />
+                      Admin Dashboard
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={() => {

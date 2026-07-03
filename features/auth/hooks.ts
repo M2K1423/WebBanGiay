@@ -53,20 +53,44 @@ export function useAuthLogic() {
       return;
     }
 
-    return onAuthStateChanged(auth, setUser);
+    return onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      if (!firebaseUser) {
+        // Clear token from cookies on signout
+        document.cookie = "firebase_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax; Secure";
+      }
+    });
   }, []);
 
   // Redirect on successful login
   useEffect(() => {
     if (user) {
       void (async () => {
+        try {
+          const token = await user.getIdToken();
+          
+          // Save token to cookies for server-side use or easy retrieval
+          document.cookie = `firebase_token=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
+
+          console.log("%c=== FIREBASE ID TOKEN FOR POSTMAN ===", "color: #0070f3; font-weight: bold; font-size: 14px;");
+          console.log(token);
+          console.log("%c=====================================", "color: #0070f3; font-weight: bold;");
+        } catch (e) {
+          console.error("Failed to fetch Firebase ID token for console logging:", e);
+        }
+
         await syncActiveUser(user).catch((syncError) => {
           console.error("Failed to sync authenticated user:", syncError);
         });
 
         // After syncing, check backend if the user is admin and redirect accordingly
         try {
-          const res = await fetch(`${getApiBaseUrl()}/users/${user.uid}`);
+          const token = await user.getIdToken();
+          const res = await fetch(`${getApiBaseUrl()}/users/${user.uid}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
           if (res.ok) {
             const data = await res.json();
             if (data && data.isAdmin) {
@@ -166,6 +190,8 @@ export function useAuthLogic() {
     setError("");
     setStatus("Dang dang xuat...");
     await signOut(auth);
+    // Explicitly clear cookie on signout
+    document.cookie = "firebase_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax; Secure";
     setStatus("Da dang xuat.");
   }, []);
 

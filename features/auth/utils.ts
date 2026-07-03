@@ -14,10 +14,12 @@ export function getApiBaseUrl() {
 }
 
 export async function syncUserProfile(user: User) {
+  const token = await user.getIdToken();
   const response = await fetch(`${getApiBaseUrl()}/users`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
     },
     body: JSON.stringify({
       uid: user.uid,
