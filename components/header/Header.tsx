@@ -15,7 +15,9 @@ import {
   FaPersonRunning,
   FaShoePrints,
   FaTableTennisPaddleBall,
-  FaUser
+  FaUser,
+  FaShieldHalved,
+  FaArrowRightFromBracket
 } from "react-icons/fa6";
 import { SiAdidas, SiNike, SiPuma } from "react-icons/si";
 import { getFirebaseAuth } from "@/lib/firebase";
@@ -405,14 +407,23 @@ export default function Header() {
                   <p className="mt-1 break-words text-sm font-semibold">{user.email ?? "Firebase user"}</p>
                 </div>
                 <div className="p-2 space-y-1">
+                  <Link
+                    href="/profile"
+                    role="menuitem"
+                    onClick={() => setIsAccountMenuOpen(false)}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                  >
+                    <FaUser className="text-base text-slate-500" />
+                    My Profile
+                  </Link>
                   {isAdmin && (
                     <Link
                       href="/admin"
                       role="menuitem"
                       onClick={() => setIsAccountMenuOpen(false)}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-[#0d3a6b] transition-colors hover:bg-slate-50"
                     >
-                      <FaUser className="text-base text-slate-500" />
+                      <FaShieldHalved className="text-base text-[#0d3a6b]" />
                       Admin Dashboard
                     </Link>
                   )}
@@ -426,7 +437,7 @@ export default function Header() {
                     className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
                     role="menuitem"
                   >
-                    <FaUser className="text-base" />
+                    <FaArrowRightFromBracket className="text-base text-red-500" />
                     {signOutLoading ? "Signing out..." : "Sign out"}
                   </button>
                 </div>
