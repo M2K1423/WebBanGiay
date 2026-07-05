@@ -139,6 +139,7 @@ export default function CartPage() {
                         <button
                           className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-white"
                           onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity + 1)}
+                          disabled={item.quantity >= 99}
                           aria-label="Increase quantity"
                         >
                           <FaPlus className="text-[11px]" />

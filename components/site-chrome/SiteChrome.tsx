@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import ChatWidget from "@/features/chat/ChatWidget";
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,6 +19,7 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
       ) : null}
       {children}
       {!isAdminRoute ? <Footer /> : null}
+      {!isAdminRoute ? <ChatWidget /> : null}
     </>
   );
 }

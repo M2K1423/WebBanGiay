@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { getApiBaseUrl } from "@/features/auth/utils";
 import { getFirebaseAuth } from "@/lib/firebase";
@@ -29,26 +29,71 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | null>(null);
 
-const STORAGE_KEY = "myshoes_cart";
+const LEGACY_STORAGE_KEY = "myshoes_cart";
+const GUEST_STORAGE_KEY = "myshoes_cart:guest";
+const MAX_QUANTITY = 99;
 
 function parsePrice(price: string): number {
   return parseInt(price.replace(/\D/g, ""), 10) || 0;
 }
 
-function loadCart(): CartItem[] {
+function storageKey(userId?: string) {
+  return userId ? `myshoes_cart:user:${userId}` : GUEST_STORAGE_KEY;
+}
+
+function normalizeQuantity(value: unknown) {
+  const quantity = Number(value);
+  if (!Number.isFinite(quantity)) return 1;
+  if (quantity > MAX_QUANTITY) return 1;
+  return Math.max(1, Math.floor(quantity));
+}
+
+function normalizeCart(value: unknown): CartItem[] {
+  if (!Array.isArray(value)) return [];
+
+  const uniqueItems = new Map<string, CartItem>();
+  value.forEach((candidate) => {
+    if (!candidate || typeof candidate !== "object") return;
+    const item = candidate as CartItem;
+    if (!item.productId || !item.name || !item.price || !item.size) return;
+    const normalized = {
+      ...item,
+      color: item.color ?? "",
+      oldPrice: item.oldPrice ?? "",
+      image: item.image ?? null,
+      quantity: normalizeQuantity(item.quantity)
+    };
+    const key = itemKey(normalized);
+    if (!uniqueItems.has(key)) uniqueItems.set(key, normalized);
+  });
+  return [...uniqueItems.values()];
+}
+
+function mergeCarts(...carts: CartItem[][]) {
+  return normalizeCart(carts.flat());
+}
+
+function loadCart(key: string): CartItem[] {
   if (typeof window === "undefined") return [];
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+    let raw = localStorage.getItem(key);
+    if (!raw && key === GUEST_STORAGE_KEY) {
+      raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (raw) {
+        localStorage.setItem(GUEST_STORAGE_KEY, raw);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      }
+    }
+    return raw ? normalizeCart(JSON.parse(raw)) : [];
   } catch {
     return [];
   }
 }
 
-function saveCart(items: CartItem[]) {
+function saveCart(key: string, items: CartItem[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  localStorage.setItem(key, JSON.stringify(normalizeCart(items)));
 }
 
 function itemKey(item: { productId: string; size: string; color: string }) {
@@ -57,38 +102,33 @@ function itemKey(item: { productId: string; size: string; color: string }) {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const syncedUserUidRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    setItems(loadCart());
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted) saveCart(items);
-  }, [items, mounted]);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
-    if (!auth) return;
-    return onAuthStateChanged(auth, setUser);
+    if (!auth) {
+      setAuthReady(true);
+      return;
+    }
+    return onAuthStateChanged(auth, (activeUser) => {
+      setUser(activeUser);
+      setAuthReady(true);
+    });
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!authReady) return;
+    const ownerKey = storageKey(user?.uid);
+    const localItems = loadCart(ownerKey);
 
     if (!user) {
-      syncedUserUidRef.current = null;
+      setItems(localItems);
       return;
     }
 
-    if (syncedUserUidRef.current === user.uid) {
-      return;
-    }
-
-    const syncCartOnLogin = async () => {
+    let cancelled = false;
+    const syncCartForUser = async () => {
       try {
         const apiBaseUrl = getApiBaseUrl();
         const token = await user.getIdToken();
@@ -98,46 +138,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
           }
         });
 
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (!cancelled) {
+            setItems(localItems);
+          }
+          return;
+        }
 
         const backendCart = await res.json();
-        const backendItems = Array.isArray(backendCart?.items) ? backendCart.items : [];
+        const backendItems = normalizeCart(backendCart?.items);
+        const guestItems = loadCart(GUEST_STORAGE_KEY);
+        const merged = mergeCarts(backendItems, localItems, guestItems);
+        if (cancelled) return;
 
-        setItems((prevLocalItems) => {
-          const merged = [...backendItems];
-          const mergedKeys = new Set(merged.map(itemKey));
+        setItems(merged);
+        saveCart(ownerKey, merged);
+        localStorage.removeItem(GUEST_STORAGE_KEY);
 
-          prevLocalItems.forEach((localItem) => {
-            const key = itemKey(localItem);
-
-            if (!mergedKeys.has(key)) {
-              merged.push(localItem);
-              mergedKeys.add(key);
-            }
-          });
-
-          void fetch(`${apiBaseUrl}/cart/${user.uid}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ items: merged })
-          }).catch((err) => console.warn("Cart backend sync failed:", err));
-
-          return merged;
-        });
-
-        syncedUserUidRef.current = user.uid;
+        void fetch(`${apiBaseUrl}/cart/${user.uid}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ items: merged })
+        }).catch((err) => console.warn("Cart backend sync failed:", err));
       } catch (err) {
+        if (!cancelled) {
+          setItems(localItems);
+        }
         console.warn("Cart backend sync on login failed:", err);
       }
     };
 
-    void syncCartOnLogin();
-  }, [user, mounted]);
+    void syncCartForUser();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authReady]);
 
   const syncToBackend = useCallback(async (currentItems: CartItem[], activeUser: User | null) => {
+    const normalizedItems = normalizeCart(currentItems);
     if (!activeUser) return;
 
     try {
@@ -149,7 +190,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ items: currentItems })
+        body: JSON.stringify({ items: normalizedItems })
       });
     } catch (err) {
       console.warn("Cart backend save failed:", err);
@@ -164,14 +205,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems((prev) => {
         const key = itemKey(item);
         const existing = prev.find((currentItem) => itemKey(currentItem) === key);
-        const updated = existing
+        const updated = normalizeCart(existing
           ? prev.map((currentItem) =>
               itemKey(currentItem) === key
-                ? { ...currentItem, quantity: currentItem.quantity + quantity }
+                ? { ...currentItem, quantity: Math.min(MAX_QUANTITY, currentItem.quantity + normalizeQuantity(quantity)) }
                 : currentItem
             )
-          : [...prev, { ...item, quantity }];
+          : [...prev, { ...item, quantity: normalizeQuantity(quantity) }]);
 
+        saveCart(storageKey(user?.uid), updated);
         void syncToBackend(updated, user);
         return updated;
       });
@@ -183,6 +225,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (productId: string, size: string, color: string) => {
       setItems((prev) => {
         const updated = prev.filter((item) => itemKey(item) !== `${productId}__${size}__${color}`);
+        saveCart(storageKey(user?.uid), updated);
         void syncToBackend(updated, user);
         return updated;
       });
@@ -198,9 +241,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
 
       setItems((prev) => {
-        const updated = prev.map((item) =>
-          itemKey(item) === `${productId}__${size}__${color}` ? { ...item, quantity } : item
-        );
+        const updated = normalizeCart(prev.map((item) =>
+          itemKey(item) === `${productId}__${size}__${color}`
+            ? { ...item, quantity: normalizeQuantity(quantity) }
+            : item
+        ));
+        saveCart(storageKey(user?.uid), updated);
         void syncToBackend(updated, user);
         return updated;
       });
@@ -210,6 +256,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => {
     setItems([]);
+    saveCart(storageKey(user?.uid), []);
 
     if (user) {
       const apiBaseUrl = getApiBaseUrl();

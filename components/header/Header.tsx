@@ -49,6 +49,28 @@ function getRealtimeBaseUrl() {
   return process.env.NEXT_PUBLIC_REALTIME_URL ?? getApiBaseUrl().replace(/\/api\/?$/, "");
 }
 
+const READ_NOTIFICATIONS_KEY = "myshoes_read_product_notifications";
+
+function notificationKey(notification: ProductNotification) {
+  return `${notification.id}:${notification.createdAt}`;
+}
+
+function getReadNotificationKeys() {
+  if (typeof window === "undefined") return new Set<string>();
+  try {
+    const value = JSON.parse(localStorage.getItem(READ_NOTIFICATIONS_KEY) ?? "[]");
+    return new Set<string>(Array.isArray(value) ? value : []);
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function rememberReadNotification(notification: ProductNotification) {
+  const keys = getReadNotificationKeys();
+  keys.add(notificationKey(notification));
+  localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify([...keys].slice(-300)));
+}
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
@@ -67,6 +89,14 @@ export default function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { count } = useCart();
+
+  const markNotificationRead = useCallback((notification: ProductNotification) => {
+    rememberReadNotification(notification);
+    const key = notificationKey(notification);
+    setLatestNotification((current) => current && notificationKey(current) === key ? null : current);
+    setUnreadNotificationCount((current) => Math.max(0, current - 1));
+    setIsNotificationMenuOpen(false);
+  }, []);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -153,8 +183,10 @@ export default function Header() {
         const data = await response.json();
 
         if (!cancelled && Array.isArray(data)) {
-          setNotifications(data as ProductNotification[]);
-          setUnreadNotificationCount(data.length);
+          const readKeys = getReadNotificationKeys();
+          const allNotifications = data as ProductNotification[];
+          setNotifications(allNotifications);
+          setUnreadNotificationCount(allNotifications.filter((item) => !readKeys.has(notificationKey(item))).length);
         }
       } catch {
         // Realtime still works when notification history is temporarily unavailable.
@@ -174,7 +206,8 @@ export default function Header() {
     const realtimeBaseUrl = getRealtimeBaseUrl();
 
     const handleProductCreated = (notification: ProductNotification) => {
-      setNotifications((current) => [notification, ...current].slice(0, 10));
+      if (getReadNotificationKeys().has(notificationKey(notification))) return;
+      setNotifications((current) => [notification, ...current.filter((item) => notificationKey(item) !== notificationKey(notification))].slice(0, 10));
       setUnreadNotificationCount((current) => current + 1);
       setLatestNotification(notification);
 
@@ -248,9 +281,13 @@ export default function Header() {
   }, []);
 
   const handleToggleNotificationMenu = useCallback(() => {
-    setIsNotificationMenuOpen((current) => !current);
-    setUnreadNotificationCount(0);
-  }, []);
+    const willOpen = !isNotificationMenuOpen;
+    setIsNotificationMenuOpen(willOpen);
+    if (willOpen) {
+      notifications.forEach(rememberReadNotification);
+      setUnreadNotificationCount(0);
+    }
+  }, [isNotificationMenuOpen, notifications]);
 
   const handleLoginClick = useCallback(() => {
     setIsAccountMenuOpen(false);
@@ -284,6 +321,7 @@ export default function Header() {
         <div className="hidden min-w-0 flex-1 items-center md:flex md:max-w-xl">
           <form onSubmit={handleSearchSubmit} className="flex w-full items-center rounded-full bg-white px-4 py-2 text-slate-900">
             <input
+              suppressHydrationWarning
               type="text"
               placeholder="Find your next pair..."
               value={searchTerm}
@@ -291,6 +329,7 @@ export default function Header() {
               className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
             />
             <button
+              suppressHydrationWarning
               type="submit"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0b2f55] text-white transition-colors hover:bg-[#0a2747]"
               aria-label="Search"
@@ -328,9 +367,7 @@ export default function Header() {
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Notifications</p>
                     <p className="mt-1 text-sm font-bold text-slate-950">New product updates</p>
                   </div>
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-                    Live
-                  </span>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">Live</span>
                 </div>
 
                 <div className="max-h-96 overflow-y-auto p-2">
@@ -341,7 +378,7 @@ export default function Header() {
                         href={`/products/${notification.id}`}
                         className="flex gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50"
                         role="menuitem"
-                        onClick={() => setIsNotificationMenuOpen(false)}
+                        onClick={() => markNotificationRead(notification)}
                       >
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
                           {notification.imageUrl ? (
@@ -500,7 +537,7 @@ export default function Header() {
         <Link
           href={`/products/${latestNotification.id}`}
           className="fixed right-5 top-36 z-[60] flex w-[340px] gap-3 rounded-2xl border border-emerald-100 bg-white p-4 text-slate-900 shadow-2xl shadow-slate-900/15 animate-fade-in-up"
-          onClick={() => setLatestNotification(null)}
+          onClick={() => markNotificationRead(latestNotification)}
         >
           <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
             {latestNotification.imageUrl ? (
