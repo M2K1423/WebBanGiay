@@ -328,8 +328,7 @@ export default function AdminOrdersPage() {
           <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Chi tiết đơn hàng</p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900">{formatOrderId(selectedOrder._id)}</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{formatOrderId(selectedOrder._id)}</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleString("vi-VN") : "-"}
                 </p>
