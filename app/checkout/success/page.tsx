@@ -21,6 +21,7 @@ type LastOrder = {
   total: number;
   paymentMethod: string;
   email?: string;
+  paymentStatus?: string;
 };
 
 function formatPrice(price: number): string {
@@ -136,7 +137,9 @@ export default function CheckoutSuccessPage() {
             <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-[#0d3a6b]">
               Order Summary
             </h2>
-            <p className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-600">Paid on delivery</p>
+            <p className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-600">
+              {orderInfo.paymentMethod === "vnpay" ? "Paid with VNPay" : "Paid on delivery"}
+            </p>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 rounded-xl bg-slate-50 p-3 text-sm">
@@ -151,7 +154,7 @@ export default function CheckoutSuccessPage() {
             <div>
               <p className="text-slate-500">Payment Method</p>
               <p className="mt-1 font-semibold text-slate-950">
-                {orderInfo.paymentMethod === "cod" ? "Cash on Delivery" : orderInfo.paymentMethod}
+                {orderInfo.paymentMethod === "cod" ? "Cash on Delivery" : orderInfo.paymentMethod === "vnpay" ? "VNPay" : orderInfo.paymentMethod}
               </p>
             </div>
             <div>

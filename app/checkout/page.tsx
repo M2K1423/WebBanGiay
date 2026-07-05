@@ -72,9 +72,9 @@ export default function CheckoutPage() {
 
     const userId = customerId ?? (formData.email.trim() || `guest-${Date.now()}`);
 
-    const payload = {
-      items,
-      total,
+      const payload = {
+        items,
+        total,
       shippingAddress: {
         fullName: formData.fullName,
         phone: formData.phone,
@@ -103,11 +103,10 @@ export default function CheckoutPage() {
         body: JSON.stringify(payload)
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create order");
-      }
-
       const createdOrder = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(createdOrder?.message || "Không thể tạo đơn hàng");
+      }
       const orderNumber =
         createdOrder?.orderNumber ??
         createdOrder?.orderId ??
@@ -127,15 +126,32 @@ export default function CheckoutPage() {
         })
       );
 
+      if (formData.paymentMethod === "vnpay") {
+        const paymentResponse = await fetch(`${getApiBaseUrl()}/payments/vnpay/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: createdOrder?._id,
+            paymentToken: createdOrder?.paymentAccessToken
+          })
+        });
+        const paymentData = await paymentResponse.json().catch(() => null);
+        if (!paymentResponse.ok || !paymentData?.paymentUrl) {
+          throw new Error(paymentData?.message || "Không tạo được giao dịch VNPay");
+        }
+        window.location.assign(paymentData.paymentUrl);
+        return;
+      }
+
       setOrderPlaced(true);
       setShowOrderSuccess(true);
 
       window.setTimeout(() => {
-        clearCart();
+        void clearCart();
         router.push("/checkout/success");
       }, 900);
-    } catch {
-      alert("Failed to create order. Please try again.");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Không thể tạo đơn hàng. Vui lòng thử lại.");
     } finally {
       setIsSubmitting(false);
     }
@@ -223,6 +239,7 @@ export default function CheckoutPage() {
                     type="email"
                     id="email"
                     name="email"
+                    required
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
@@ -275,6 +292,7 @@ export default function CheckoutPage() {
               <div className="space-y-3">
                 <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-colors ${formData.paymentMethod === "cod" ? "border-[#0d3a6b] bg-[#0d3a6b]/5" : "border-slate-200 hover:border-slate-300"
                   }`}>
+                  <input type="radio" name="paymentMethod" value="cod" checked={formData.paymentMethod === "cod"} onChange={handleChange} className="sr-only" />
                   <div className="flex items-center gap-3">
                     <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${formData.paymentMethod === "cod" ? "border-[#0d3a6b]" : "border-slate-300"
                       }`}>
@@ -290,16 +308,18 @@ export default function CheckoutPage() {
 
                 <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-colors ${formData.paymentMethod === "vnpay" ? "border-[#0d3a6b] bg-[#0d3a6b]/5" : "border-slate-200 hover:border-slate-300"
                   }`}>
+                  <input type="radio" name="paymentMethod" value="vnpay" checked={formData.paymentMethod === "vnpay"} onChange={handleChange} className="sr-only" />
                   <div className="flex items-center gap-3">
                     <div className={`flex h-5 w-5 items-center justify-center rounded-full border ${formData.paymentMethod === "vnpay" ? "border-[#0d3a6b]" : "border-slate-300"
                       }`}>
                       {formData.paymentMethod === "vnpay" && <div className="h-3 w-3 rounded-full bg-[#0d3a6b]" />}
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">VNPay Payment (Under Maintenance)</p>
+                      <p className="font-semibold text-slate-900">VNPay Payment</p>
                       <p className="text-xs text-slate-500">ATM / Visa / MasterCard / JCB</p>
                     </div>
                   </div>
+                  <div className="flex h-8 items-center rounded-lg bg-gradient-to-r from-[#005baa] to-[#ed1c24] px-3 text-xs font-black italic text-white">VNPAY</div>
                 </label>
               </div>
             </section>
