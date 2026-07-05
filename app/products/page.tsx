@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FaChevronRight, FaStar, FaFilter } from "react-icons/fa6";
 import { getAllProducts, getProductImage } from "@/lib/products";
+import SortSelect from "@/components/product/SortSelect";
 
 const PRODUCTS_PER_PAGE = 9;
 
@@ -16,12 +17,22 @@ const CATEGORIES = ["Running", "Lifestyle", "Court", "Trail", "Training", "Casua
 export default async function ProductsPage({
   searchParams
 }: {
-  searchParams: Promise<{ brand?: string; category?: string; sort?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ brand?: string; category?: string; sort?: string; q?: string; page?: string; view?: string; type?: string }>;
 }) {
   const params = await searchParams;
-  const { brand, category, sort, q, page } = params;
+  const { brand, category, sort, q, page, view, type } = params;
+  const viewMode = view === "list" ? "list" : "grid";
 
   let products = await getAllProducts();
+
+  // Filter by Product Type
+  if (type === "popular") {
+    products = products.filter(p => p.rating >= 4.5);
+  } else if (type === "best-seller") {
+    products = products.filter(p => p.sold >= 50);
+  } else if (type === "best-sale") {
+    products = products.filter(p => p.discount && p.discount.trim() !== "");
+  }
 
   // Filter
   if (brand) products = products.filter(p => p.brand.toLowerCase() === brand.toLowerCase());
@@ -52,6 +63,13 @@ export default async function ProductsPage({
     products = [...products].sort((a, b) => b.rating - a.rating);
   } else if (sort === "sold") {
     products = [...products].sort((a, b) => b.sold - a.sold);
+  } else if (sort === "discount") {
+    const getDiscountValue = (discountStr?: string) => {
+      if (!discountStr) return 0;
+      const parsed = parseInt(discountStr.replace(/[^\d]/g, ""), 10);
+      return isNaN(parsed) ? 0 : parsed;
+    };
+    products = [...products].sort((a, b) => getDiscountValue(b.discount) - getDiscountValue(a.discount));
   }
 
   const currentPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
@@ -67,6 +85,7 @@ export default async function ProductsPage({
     if (brand && key !== "brand") p.set("brand", brand);
     if (category && key !== "category") p.set("category", category);
     if (sort && key !== "sort") p.set("sort", sort);
+    if (type && key !== "type") p.set("type", type);
     if (q && key !== "q") p.set("q", q);
     if (value) p.set(key, value);
     return `/products?${p.toString()}`;
@@ -77,6 +96,7 @@ export default async function ProductsPage({
     if (brand) p.set("brand", brand);
     if (category) p.set("category", category);
     if (sort) p.set("sort", sort);
+    if (type) p.set("type", type);
     if (q) p.set("q", q);
     if (pageNumber > 1) p.set("page", String(pageNumber));
     return `/products${p.toString() ? `?${p.toString()}` : ""}`;
@@ -105,7 +125,7 @@ export default async function ProductsPage({
           <aside className="hidden w-60 shrink-0 lg:block">
             <div className="sticky top-24 space-y-6">
               {/* Active filters */}
-              {(brand || category) && (
+              {(brand || category || type) && (
                 <div className="rounded-2xl bg-white p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-sm font-semibold text-slate-900">Active Filters</p>
@@ -122,6 +142,12 @@ export default async function ProductsPage({
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#0d3a6b]/10 px-3 py-1 text-xs font-semibold text-[#0d3a6b]">
                         {category}
                         <Link href={buildUrl("category", "")} className="ml-1 hover:text-rose-500">×</Link>
+                      </span>
+                    )}
+                    {type && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#0d3a6b]/10 px-3 py-1 text-xs font-semibold text-[#0d3a6b]">
+                        {type === "popular" ? "Popular" : type === "best-seller" ? "Best Sellers" : "Best Deals"}
+                        <Link href={buildUrl("type", "")} className="ml-1 hover:text-rose-500">×</Link>
                       </span>
                     )}
                   </div>
@@ -167,19 +193,37 @@ export default async function ProductsPage({
                   ))}
                 </div>
               </div>
+
+              {/* Product Type filter */}
+              <div className="rounded-2xl bg-white p-4 shadow-sm">
+                <p className="mb-3 text-sm font-semibold text-slate-900">Product Type</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "Popular", value: "popular" },
+                    { label: "Best Sellers", value: "best-seller" },
+                    { label: "Best Deals", value: "best-sale" },
+                  ].map((t) => (
+                    <Link
+                      key={t.value}
+                      href={buildUrl("type", type === t.value ? "" : t.value)}
+                      className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors ${
+                        type === t.value
+                          ? "bg-[#0d3a6b] !text-white font-semibold"
+                          : "text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {t.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           </aside>
 
           {/* Main content */}
           <div className="min-w-0 flex-1">
             {/* Header row */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-semibold text-slate-900">
-                  {brand ? `${brand} Shoes` : category ? `${category} Shoes` : q ? `Results for "${q}"` : "All Products"}
-                </h1>
-                <p className="text-sm text-slate-500 mt-1">{products.length} {products.length === 1 ? "product" : "products"}</p>
-              </div>
+            <div className="mb-6 flex flex-wrap items-center justify-end gap-4">
               <div className="flex items-center gap-3">
                 {/* Mobile filter button */}
                 <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm lg:hidden">
@@ -187,30 +231,7 @@ export default async function ProductsPage({
                   Filter
                 </button>
                 {/* Sort */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 hidden sm:block">Sort by:</span>
-                  <div className="flex gap-1">
-                    {[
-                      { label: "Newest", value: "" },
-                      { label: "Price ↑", value: "price-asc" },
-                      { label: "Price ↓", value: "price-desc" },
-                      { label: "Rating", value: "rating" },
-                      { label: "Best Sellers", value: "sold" },
-                    ].map((s) => (
-                      <Link
-                        key={s.value}
-                        href={buildUrl("sort", s.value)}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                          (sort ?? "") === s.value
-                            ? "bg-[#0d3a6b] !text-white"
-                            : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
-                        }`}
-                      >
-                        {s.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+                <SortSelect currentSort={sort ?? ""} />
               </div>
             </div>
 
@@ -223,6 +244,73 @@ export default async function ProductsPage({
                 <Link href="/products" className="mt-6 rounded-full bg-[#0d3a6b] px-6 py-2 text-sm font-semibold text-white">
                   View all products
                 </Link>
+              </div>
+            ) : viewMode === "list" ? (
+              <div className="flex flex-col gap-4">
+                {visibleProducts.map((product) => {
+                  const img = getProductImage(product);
+                  return (
+                    <Link
+                      key={product.id}
+                      href={`/products/${product.id}`}
+                      className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 flex flex-col sm:flex-row border border-slate-100"
+                    >
+                      <div className="relative h-48 w-full sm:w-60 shrink-0 overflow-hidden bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
+                        {img ? (
+                          <img
+                            src={img}
+                            alt={product.name}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-4xl">👟</div>
+                        )}
+                        {product.discount && (
+                          <span className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+                            {product.discount}
+                          </span>
+                        )}
+                        {product.productType === "Flash Sale" && (
+                          <span className="absolute right-4 top-4 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-[#1b1202]">
+                            Flash Sale
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+                            <span className="font-medium text-[#0d3a6b]">{product.brand}</span>
+                            <span>{product.category}</span>
+                          </div>
+                          <h3 className="text-base font-semibold text-slate-900 leading-snug group-hover:text-[#0d3a6b] transition-colors line-clamp-1">
+                            {product.name}
+                          </h3>
+                          <p className="mt-2 text-sm text-slate-500 line-clamp-2">{product.description}</p>
+                        </div>
+                        <div className="mt-4 flex items-end justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg font-bold text-[#0d3a6b]">{product.price}</span>
+                              {product.oldPrice && (
+                                <span className="text-sm text-slate-400 line-through">{product.oldPrice}</span>
+                              )}
+                            </div>
+                            <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+                              <FaStar className="text-amber-400" />
+                              {product.rating.toFixed(1)} · {product.sold} sold
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-[#0d3a6b] px-4 py-2 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            View details
+                          </span>
+                        </div>
+                        {product.promotion && (
+                          <p className="mt-2 text-xs font-medium text-emerald-600">{product.promotion}</p>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -244,9 +332,11 @@ export default async function ProductsPage({
                         ) : (
                           <div className="flex h-full items-center justify-center text-4xl">👟</div>
                         )}
-                        <span className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
-                          {product.discount}
-                        </span>
+                        {product.discount && (
+                          <span className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+                            {product.discount}
+                          </span>
+                        )}
                         {product.productType === "Flash Sale" && (
                           <span className="absolute right-4 top-4 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-[#1b1202]">
                             Flash Sale
@@ -266,7 +356,9 @@ export default async function ProductsPage({
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="text-base font-semibold text-[#0d3a6b]">{product.price}</span>
-                              <span className="text-xs text-slate-400 line-through">{product.oldPrice}</span>
+                              {product.oldPrice && (
+                                <span className="text-xs text-slate-400 line-through">{product.oldPrice}</span>
+                              )}
                             </div>
                             <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                               <FaStar className="text-amber-400" />
@@ -288,8 +380,8 @@ export default async function ProductsPage({
             )}
 
             {products.length > 0 && totalPages > 1 && (
-              <div className="mt-8 flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                <div className="ml-auto flex flex-wrap items-center gap-2">
+              <div className="mt-8 flex justify-center rounded-3xl bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={buildPageUrl(safePage - 1)}
                     aria-disabled={safePage === 1}
@@ -307,7 +399,7 @@ export default async function ProductsPage({
                       href={buildPageUrl(pageNumber)}
                       className={`min-w-10 rounded-xl px-3 py-2 text-sm font-semibold text-center transition-colors ${
                         pageNumber === safePage
-                          ? "bg-[#0d3a6b] text-white"
+                          ? "bg-[#0d3a6b] !text-white"
                           : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                       }`}
                     >
