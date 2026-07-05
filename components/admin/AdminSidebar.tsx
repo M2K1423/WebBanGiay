@@ -9,6 +9,7 @@ import {
   FaUsers,
   FaArrowRightFromBracket,
   FaStore,
+  FaComments,
 } from "react-icons/fa6";
 
 const MENU = [
@@ -16,6 +17,7 @@ const MENU = [
   { name: "Sản phẩm", href: "/admin/products", icon: FaBoxOpen },
   { name: "Đơn hàng", href: "/admin/orders", icon: FaCartShopping },
   { name: "Khách hàng", href: "/admin/users", icon: FaUsers },
+  { name: "Tin nhắn", href: "/admin/chat", icon: FaComments },
 ];
 
 export default function AdminSidebar() {
