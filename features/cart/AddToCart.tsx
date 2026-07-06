@@ -13,16 +13,20 @@ type AddToCartProps = {
     oldPrice: string;
     image: string | null;
     colors: string[];
+    stock: number;
   };
   sizes: string[];
 };
 
 export default function AddToCart({ product, sizes }: AddToCartProps) {
+  const isOutOfStock = (product.stock ?? 0) <= 0;
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>(
     product.colors && product.colors.length > 0 ? product.colors[0] : ""
   );
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>(
+    isOutOfStock ? "Sản phẩm này hiện đang hết hàng" : ""
+  );
   
   const { addItem } = useCart();
   const router = useRouter();
@@ -62,13 +66,14 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
           <h3 className="text-sm font-semibold text-slate-900">
             Select size <span className="text-rose-500">*</span>
           </h3>
-          <button className="text-sm text-[#0d3a6b] hover:underline">Size Guide</button>
+          <button className="text-sm text-[#0d3a6b] hover:underline" disabled={isOutOfStock}>Size Guide</button>
         </div>
         <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-7">
           {sizes.map(size => (
             <button 
               key={size}
               type="button"
+              disabled={isOutOfStock}
               onClick={() => {
                 setSelectedSize(size);
                 setError("");
@@ -77,7 +82,7 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
                 selectedSize === size
                   ? "border-[#0d3a6b] bg-[#0d3a6b] text-white"
                   : "border-slate-200 bg-white text-slate-700 hover:border-[#0d3a6b] hover:text-[#0d3a6b]"
-              }`}
+              } disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-400 disabled:cursor-not-allowed`}
             >
               {size}
             </button>
@@ -93,12 +98,13 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
               <button 
                 key={color} 
                 type="button"
+                disabled={isOutOfStock}
                 onClick={() => setSelectedColor(color)}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                   selectedColor === color
                     ? "border-[#0d3a6b] bg-[#0d3a6b]/5 text-[#0d3a6b]"
                     : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                } disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-slate-400 disabled:cursor-not-allowed`}
               >
                 {color}
               </button>
@@ -107,20 +113,26 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
         </div>
       )}
 
-      {error && (
+      {isOutOfStock ? (
+        <div className="mt-6 rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 border border-rose-100 shadow-sm animate-pulse">
+          🚫 Sản phẩm này hiện đang hết hàng. Vui lòng quay lại sau!
+        </div>
+      ) : error ? (
         <div className="mt-4 text-sm font-medium text-rose-500">{error}</div>
-      )}
+      ) : null}
 
       <div className="mt-8 flex gap-4">
         <button 
           onClick={handleAdd}
-          className="flex-1 rounded-full bg-[#0d3a6b] px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/30 transition-transform hover:-translate-y-1 active:translate-y-0"
+          disabled={isOutOfStock}
+          className="flex-1 rounded-full bg-[#0d3a6b] px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/30 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           Add to cart
         </button>
         <button 
           onClick={handleBuyNow}
-          className="flex-1 rounded-full bg-rose-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-rose-600/30 transition-transform hover:-translate-y-1 active:translate-y-0"
+          disabled={isOutOfStock}
+          className="flex-1 rounded-full bg-rose-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-rose-600/30 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           Buy now
         </button>

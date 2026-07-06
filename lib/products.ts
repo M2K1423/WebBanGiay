@@ -12,6 +12,7 @@ export type FeaturedProduct = {
   rating: number;
   reviewCount: number;
   sold: number;
+  stock: number;
   colors: string[];
   imageUrls: string[];
 };

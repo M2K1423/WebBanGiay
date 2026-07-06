@@ -24,7 +24,7 @@ type CartContextType = {
   addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
   removeItem: (productId: string, size: string, color: string) => void;
   updateQuantity: (productId: string, size: string, color: string, quantity: number) => void;
-  clearCart: () => void;
+  clearCart: () => Promise<void>;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -56,11 +56,15 @@ function normalizeCart(value: unknown): CartItem[] {
     if (!candidate || typeof candidate !== "object") return;
     const item = candidate as CartItem;
     if (!item.productId || !item.name || !item.price || !item.size) return;
-    const normalized = {
-      ...item,
+    const normalized: CartItem = {
+      productId: item.productId,
+      name: item.name,
+      brand: item.brand,
+      price: item.price,
       color: item.color ?? "",
       oldPrice: item.oldPrice ?? "",
       image: item.image ?? null,
+      size: item.size,
       quantity: normalizeQuantity(item.quantity)
     };
     const key = itemKey(normalized);
@@ -254,25 +258,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [user, syncToBackend, removeItem]
   );
 
-  const clearCart = useCallback(() => {
-    setItems([]);
-    saveCart(storageKey(user?.uid), []);
+  const clearCart = useCallback(async () => {
+    const auth = getFirebaseAuth();
+    if (auth) await auth.authStateReady();
+    const activeUser = user ?? auth?.currentUser ?? null;
 
-    if (user) {
-      const apiBaseUrl = getApiBaseUrl();
-      void (async () => {
-        try {
-          const token = await user.getIdToken();
-          await fetch(`${apiBaseUrl}/cart/${user.uid}`, {
-            method: "DELETE",
-            headers: {
-              "Authorization": `Bearer ${token}`
-            }
-          });
-        } catch (err) {
-          console.warn("Cart backend clear failed:", err);
-        }
-      })();
+    setItems([]);
+    saveCart(storageKey(activeUser?.uid), []);
+    localStorage.removeItem(GUEST_STORAGE_KEY);
+
+    if (activeUser) {
+      try {
+        const apiBaseUrl = getApiBaseUrl();
+        const token = await activeUser.getIdToken();
+        const response = await fetch(`${apiBaseUrl}/cart/${activeUser.uid}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setItems([]);
+        saveCart(storageKey(activeUser.uid), []);
+      } catch (err) {
+        console.warn("Cart backend clear failed:", err);
+      }
     }
   }, [user]);
 

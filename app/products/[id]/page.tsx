@@ -75,6 +75,10 @@ export default async function ProductDetailPage({
                 <span>({product.reviewCount} reviews)</span>
                 <span className="px-1.5">·</span>
                 <span>{product.sold} sold</span>
+                <span className="px-1.5">·</span>
+                <span className={product.stock > 0 ? "text-emerald-600 font-semibold" : "text-rose-600 font-bold"}>
+                  {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                </span>
               </div>
             </div>
 
@@ -104,6 +108,7 @@ export default async function ProductDetailPage({
                 oldPrice: product.oldPrice,
                 image: getProductImage(product),
                 colors: product.colors ?? [],
+                stock: product.stock ?? 0,
               }}
               sizes={SIZES}
             />

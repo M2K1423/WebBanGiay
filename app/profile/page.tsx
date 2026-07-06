@@ -35,7 +35,7 @@ type Order = {
   email: string;
   address: string;
   items: OrderItem[];
-  totalPrice: number;
+  total: number;
   paymentMethod: string;
   status: string;
   createdAt: string;
@@ -338,7 +338,7 @@ export default function ProfilePage() {
                         {translateStatus(order.status)}
                       </span>
                       <span className="font-extrabold text-rose-600 text-lg">
-                        {order.totalPrice.toLocaleString("vi-VN")} đ
+                        {order.total.toLocaleString("vi-VN")} đ
                       </span>
                     </div>
                   </div>

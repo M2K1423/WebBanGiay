@@ -20,6 +20,7 @@ type Product = {
   rating: number;
   reviewCount: number;
   sold: number;
+  stock: number;
   colors: string[];
 };
 
@@ -37,6 +38,7 @@ type ProductFormState = {
   rating: string;
   reviewCount: string;
   sold: string;
+  stock: string;
   colors: string;
 };
 
@@ -54,6 +56,7 @@ const EMPTY_FORM: ProductFormState = {
   rating: "0",
   reviewCount: "0",
   sold: "0",
+  stock: "100",
   colors: ""
 };
 
@@ -88,6 +91,7 @@ function productToForm(product: Product): ProductFormState {
     rating: String(product.rating ?? 0),
     reviewCount: String(product.reviewCount ?? 0),
     sold: String(product.sold ?? 0),
+    stock: String(product.stock ?? 100),
     colors: (product.colors ?? []).join(", ")
   };
 }
@@ -185,6 +189,7 @@ export default function AdminProductsPage() {
       rating: toNumber(formData.rating),
       reviewCount: toNumber(formData.reviewCount),
       sold: toNumber(formData.sold),
+      stock: toNumber(formData.stock, 100),
       colors: toList(formData.colors)
     };
 
@@ -206,7 +211,16 @@ export default function AdminProductsPage() {
       );
 
       if (!response.ok) {
-        alert("Lưu thất bại");
+        let errMsg = "Lỗi hệ thống";
+        try {
+          const errData = await response.json();
+          if (errData.message) {
+            errMsg = Array.isArray(errData.message)
+              ? errData.message.join(", ")
+              : String(errData.message);
+          }
+        } catch {}
+        alert(`Lưu thất bại: ${errMsg}`);
         return;
       }
 
@@ -243,19 +257,20 @@ export default function AdminProductsPage() {
                 <th className="px-6 py-4 font-medium">Hãng</th>
                 <th className="px-6 py-4 font-medium">Danh mục</th>
                 <th className="px-6 py-4 font-medium">Giá bán</th>
+                <th className="px-6 py-4 font-medium text-center">Tồn kho</th>
                 <th className="px-6 py-4 font-medium">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
                     Đang tải...
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
                     Chưa có sản phẩm nào
                   </td>
                 </tr>
@@ -284,6 +299,7 @@ export default function AdminProductsPage() {
                     <td className="px-6 py-4 capitalize">{product.brand}</td>
                     <td className="px-6 py-4 capitalize">{product.category}</td>
                     <td className="px-6 py-4 font-medium text-rose-600">{product.price}</td>
+                    <td className="px-6 py-4 text-center font-semibold text-slate-700">{product.stock ?? 0}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3 text-lg">
                         <button
@@ -450,7 +466,7 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-4">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-slate-700">Đánh giá sao</label>
                   <input
@@ -482,6 +498,18 @@ export default function AdminProductsPage() {
                     min="0"
                     value={formData.sold}
                     onChange={(event) => setFormData({ ...formData, sold: event.target.value })}
+                    className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Tồn kho *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={formData.stock}
+                    onChange={(event) => setFormData({ ...formData, stock: event.target.value })}
                     className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
                   />
                 </div>
