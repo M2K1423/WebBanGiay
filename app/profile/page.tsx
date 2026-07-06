@@ -7,6 +7,7 @@ import { FaUser, FaBagShopping, FaClock, FaIdCard, FaCircleInfo, FaEnvelope, FaS
 import { getApiBaseUrl } from "@/features/auth/utils";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import WriteReviewModal from "@/features/reviews/WriteReviewModal";
 
 type UserProfile = {
   uid: string;
@@ -41,6 +42,14 @@ type Order = {
   createdAt: string;
 };
 
+const parsePrice = (priceVal: any): number => {
+  if (typeof priceVal === "number") return priceVal;
+  if (!priceVal) return 0;
+  const cleaned = String(priceVal).replace(/[^0-9]/g, "");
+  const parsed = parseInt(cleaned, 10);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -48,6 +57,8 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<"info" | "orders">("info");
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [reviewProductId, setReviewProductId] = useState<string | null>(null);
+  const [reviewProductName, setReviewProductName] = useState<string>("");
   const router = useRouter();
 
   useEffect(() => {
@@ -357,9 +368,22 @@ export default function ProfilePage() {
                             <span>Qty: <strong className="text-slate-700">{item.quantity}</strong></span>
                           </div>
                         </div>
-                        <span className="font-semibold text-slate-700 shrink-0 text-sm">
-                          {(item.price * item.quantity).toLocaleString("vi-VN")} đ
-                        </span>
+                        <div className="flex items-center gap-4">
+                          <span className="font-semibold text-slate-700 shrink-0 text-sm">
+                            {(parsePrice(item.price) * item.quantity).toLocaleString("vi-VN")} đ
+                          </span>
+                          {["completed", "delivered", "đã giao"].includes(order.status.toLowerCase()) && (
+                            <button
+                              onClick={() => {
+                                setReviewProductId(item.productId);
+                                setReviewProductName(item.name);
+                              }}
+                              className="text-xs font-bold text-[#0d3a6b] hover:text-[#0d3a6b]/80 border border-[#0d3a6b] hover:bg-[#0d3a6b]/5 px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                            >
+                              Viết đánh giá
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -382,6 +406,19 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      <WriteReviewModal
+        isOpen={reviewProductId !== null}
+        onClose={() => {
+          setReviewProductId(null);
+          setReviewProductName("");
+        }}
+        productId={reviewProductId || ""}
+        productName={reviewProductName}
+        onSuccess={() => {
+          alert("Gửi đánh giá thành công! Nhận xét của bạn đã được xuất bản.");
+        }}
+      />
     </div>
   );
 }

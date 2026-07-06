@@ -5,6 +5,7 @@ import { FaChevronRight, FaStar, FaShieldHeart, FaArrowsRotate, FaMedal } from "
 import { getProductById, getProductImage, getProductsByCategory } from "@/lib/products";
 import AddToCart from "@/features/cart/AddToCart";
 import ProductGallery from "@/components/product/ProductGallery";
+import ProductReviews from "@/features/reviews/ProductReviews";
 
 export async function generateMetadata({
   params
@@ -45,7 +46,7 @@ export default async function ProductDetailPage({
     <main className="min-h-screen bg-[#f5f7fb]">
       {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-100">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
           <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
             <Link href="/" className="hover:text-[#0d3a6b] transition-colors">Home</Link>
             <FaChevronRight className="text-[10px]" />
@@ -58,8 +59,8 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-2">
+      <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[4.1fr_5.9fr] items-start">
           {/* Image Gallery */}
           <ProductGallery product={product} />
 
@@ -69,32 +70,32 @@ export default async function ProductDetailPage({
               <Link href={`/brand/${product.brand.toLowerCase()}`} className="text-sm font-semibold uppercase tracking-wider text-[#0d3a6b] hover:underline">
                 {product.brand}
               </Link>
-              <div className="flex items-center gap-1.5 text-sm text-slate-500">
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-500 font-semibold">
                 <FaStar className="text-amber-400" />
-                <span className="font-semibold text-slate-900">{product.rating.toFixed(1)}</span>
-                <span>({product.reviewCount} reviews)</span>
-                <span className="px-1.5">·</span>
-                <span>{product.sold} sold</span>
-                <span className="px-1.5">·</span>
-                <span className={product.stock > 0 ? "text-emerald-600 font-semibold" : "text-rose-600 font-bold"}>
-                  {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                <span className="font-bold text-slate-900">{product.rating.toFixed(1)}</span>
+                <span>({product.reviewCount} đánh giá)</span>
+                <span className="px-1">·</span>
+                <span>Đã bán {product.sold}</span>
+                <span className="px-1">·</span>
+                <span className={product.stock > 0 ? "text-emerald-600" : "text-rose-600"}>
+                  {product.stock > 0 ? `Còn ${product.stock} đôi` : "Hết hàng"}
                 </span>
               </div>
             </div>
 
-            <h1 className="text-3xl font-semibold text-slate-900 leading-tight sm:text-4xl">
+            <h1 className="text-xl font-black uppercase tracking-wider text-slate-900 leading-tight sm:text-2xl">
               {product.name}
             </h1>
 
-            <div className="mt-6 flex items-end gap-3">
-              <span className="text-3xl font-semibold text-rose-600">{product.price}</span>
+            <div className="mt-2 flex items-end gap-3">
+              <span className="text-2xl font-bold text-rose-600">{product.price}</span>
               {product.oldPrice && (
-                <span className="text-lg text-slate-400 line-through mb-1">{product.oldPrice}</span>
+                <span className="text-sm text-slate-400 line-through mb-0.5">{product.oldPrice}</span>
               )}
             </div>
             
             {product.promotion && (
-              <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 border border-emerald-100">
+              <div className="mt-3 rounded-lg bg-emerald-50/70 px-3.5 py-2 text-xs font-semibold text-emerald-700 border border-emerald-100/60">
                 🎁 {product.promotion}
               </div>
             )}
@@ -113,50 +114,42 @@ export default async function ProductDetailPage({
               sizes={SIZES}
             />
 
-            {/* Trust Badges */}
-            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3 rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
-              <div className="flex flex-col items-center text-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                  <FaShieldHeart className="text-lg" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-900">100% Authentic</p>
-                  <p className="text-[11px] text-slate-500">10x refund if fake</p>
-                </div>
+            {/* Compact Trust Badges */}
+            <div className="mt-6 grid grid-cols-3 gap-2 border-t border-slate-100 pt-6 text-center text-[10px] sm:text-[11px] text-slate-500 font-bold uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 justify-center">
+                <FaShieldHeart className="text-rose-500 shrink-0 text-sm" />
+                <span>Chính hãng</span>
               </div>
-              <div className="flex flex-col items-center text-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                  <FaArrowsRotate className="text-lg" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-900">30-Day Returns</p>
-                  <p className="text-[11px] text-slate-500">Free size exchange</p>
-                </div>
+              <div className="flex items-center gap-1.5 justify-center border-x border-slate-100">
+                <FaArrowsRotate className="text-[#0d3a6b] shrink-0 text-sm" />
+                <span>30 ngày đổi size</span>
               </div>
-              <div className="flex flex-col items-center text-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                  <FaMedal className="text-lg" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-900">1-Year Warranty</p>
-                  <p className="text-[11px] text-slate-500">Shop with confidence</p>
-                </div>
+              <div className="flex items-center gap-1.5 justify-center">
+                <FaMedal className="text-amber-500 shrink-0 text-sm" />
+                <span>Bảo hành 1 năm</span>
               </div>
             </div>
 
-            <div className="mt-10">
-              <h3 className="text-lg font-semibold text-slate-900">Product Description</h3>
-              <div className="mt-4 prose prose-sm max-w-none text-slate-600">
-                <p className="whitespace-pre-line">{product.description}</p>
-              </div>
+            {/* Product Description */}
+            <div className="mt-6 border-t border-slate-100 pt-6">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Mô tả sản phẩm</h3>
+              <p className="mt-2 text-xs sm:text-sm text-slate-600 font-medium leading-relaxed whitespace-pre-line">
+                {product.description}
+              </p>
             </div>
+
           </div>
+        </div>
+
+        {/* Product Reviews */}
+        <div className="mt-12 border-t border-slate-200 pt-10">
+          <ProductReviews productId={product.id} />
         </div>
       </div>
 
       {/* Related Products */}
       {filteredRelated.length > 0 && (
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-semibold text-slate-900 mb-8">Related Products</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {filteredRelated.map((item) => {

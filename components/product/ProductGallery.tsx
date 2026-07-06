@@ -13,7 +13,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
 
   return (
     <div className="space-y-4">
-      <div className="relative aspect-square overflow-hidden rounded-3xl bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff] shadow-sm">
+      <div className="relative aspect-[1.15] overflow-hidden rounded-3xl bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff] shadow-sm flex items-center justify-center max-h-[440px]">
         {selectedImage ? (
           <img
             src={selectedImage}
