@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaBagShopping, FaChevronRight, FaMinus, FaPlus, FaTrashCan } from "react-icons/fa6";
@@ -16,6 +17,31 @@ function parsePrice(price: string): number {
 export default function CartPage() {
   const { items, total, count, removeItem, updateQuantity } = useCart();
   const router = useRouter();
+  const [stocks, setStocks] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchStocks = async () => {
+      const stockMap: Record<string, number> = {};
+      const apiBaseUrl = typeof window !== "undefined"
+        ? (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api")
+        : "http://localhost:3001/api";
+      for (const item of items) {
+        try {
+          const res = await fetch(`${apiBaseUrl}/products/${item.productId}`);
+          if (res.ok) {
+            const prod = await res.json();
+            stockMap[item.productId] = prod.stock ?? 0;
+          }
+        } catch {}
+      }
+      setStocks(stockMap);
+    };
+    if (items.length > 0) {
+      void fetchStocks();
+    }
+  }, [items]);
+
+  const hasStockError = items.some(item => stocks[item.productId] !== undefined && item.quantity > stocks[item.productId]);
 
   if (items.length === 0) {
     return (
@@ -116,6 +142,11 @@ export default function CartPage() {
                         <p className="mt-1 text-xs text-slate-500">
                           {item.color || "Default"}{item.size ? `, Size ${item.size}` : ""}
                         </p>
+                        {stocks[item.productId] !== undefined && item.quantity > stocks[item.productId] && (
+                          <p className="mt-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-2 py-0.5 inline-block animate-pulse">
+                            ⚠️ Chỉ còn {stocks[item.productId]} đôi trong kho
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -137,9 +168,9 @@ export default function CartPage() {
                         </button>
                         <span className="w-9 text-center text-sm font-bold text-slate-950">{item.quantity}</span>
                         <button
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-white"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed"
                           onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity + 1)}
-                          disabled={item.quantity >= 99}
+                          disabled={item.quantity >= (stocks[item.productId] ?? 99)}
                           aria-label="Increase quantity"
                         >
                           <FaPlus className="text-[11px]" />
@@ -198,10 +229,16 @@ export default function CartPage() {
               <div className="px-5 py-4">
                 <button
                   onClick={() => router.push("/checkout")}
-                  className="w-full rounded-full bg-[#0d3a6b] px-6 py-3.5 text-sm font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5 hover:bg-[#0a2747]"
+                  disabled={hasStockError}
+                  className="w-full rounded-full bg-[#0d3a6b] px-6 py-3.5 text-sm font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#0d3a6b]/20 transition-all hover:-translate-y-0.5 hover:bg-[#0a2747] disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed disabled:translate-y-0"
                 >
                   Checkout
                 </button>
+                {hasStockError && (
+                  <p className="mt-2 text-center text-xs font-semibold text-rose-500">
+                    Vui lòng giảm số lượng sản phẩm vượt quá tồn kho để thanh toán.
+                  </p>
+                )}
                 <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 p-3 text-xs text-slate-500">
                   <p className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-500" />

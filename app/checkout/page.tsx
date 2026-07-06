@@ -29,6 +29,31 @@ export default function CheckoutPage() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const [stocks, setStocks] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchStocks = async () => {
+      const stockMap: Record<string, number> = {};
+      const apiBaseUrl = typeof window !== "undefined"
+        ? (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api")
+        : "http://localhost:3001/api";
+      for (const item of items) {
+        try {
+          const res = await fetch(`${apiBaseUrl}/products/${item.productId}`);
+          if (res.ok) {
+            const prod = await res.json();
+            stockMap[item.productId] = prod.stock ?? 0;
+          }
+        } catch {}
+      }
+      setStocks(stockMap);
+    };
+    if (items.length > 0) {
+      void fetchStocks();
+    }
+  }, [items]);
+
+  const hasStockError = items.some(item => stocks[item.productId] !== undefined && item.quantity > stocks[item.productId]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -198,6 +223,16 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-bold text-slate-950">Shipping Information</h2>
               </div>
 
+              {hasStockError && (
+                <div className="mb-6 rounded-2xl bg-rose-50 border border-rose-100 p-4 text-sm font-semibold text-rose-700 shadow-sm animate-pulse flex items-center gap-3">
+                  <span className="text-lg">⚠️</span>
+                  <div>
+                    <p className="font-bold">Đơn hàng vượt quá tồn kho thực tế!</p>
+                    <p className="font-normal text-xs text-rose-600 mt-0.5">Một số sản phẩm trong giỏ hàng có số lượng vượt mức tồn kho hiện có. Vui lòng quay lại <Link href="/cart" className="underline font-bold hover:text-rose-800">Giỏ hàng</Link> để điều chỉnh.</p>
+                  </div>
+                </div>
+              )}
+
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -342,6 +377,11 @@ export default function CheckoutPage() {
                     <div className="flex-1 text-sm">
                       <p className="font-medium text-slate-900 line-clamp-2">{item.name}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{item.color ? `${item.color}, ` : ""}Size {item.size}</p>
+                      {stocks[item.productId] !== undefined && item.quantity > stocks[item.productId] && (
+                        <p className="mt-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-2 py-0.5 inline-block animate-pulse">
+                          ⚠️ Chỉ còn {stocks[item.productId]} đôi trong kho
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-slate-900">{item.price}</p>
@@ -372,8 +412,8 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="mt-8 w-full rounded-full bg-[#0d3a6b] py-4 text-base font-bold text-white shadow-lg shadow-[#0d3a6b]/20 transition-transform hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0 flex justify-center items-center gap-2"
+                disabled={isSubmitting || hasStockError}
+                className="mt-8 w-full rounded-full bg-[#0d3a6b] py-4 text-base font-bold text-white shadow-lg shadow-[#0d3a6b]/20 transition-all hover:-translate-y-0.5 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-100 disabled:translate-y-0 flex justify-center items-center gap-2"
               >
                 {isSubmitting ? (
                   <>Processing...</>
