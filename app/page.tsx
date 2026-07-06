@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa6";
 import Link from "next/link";
 import { getFeaturedProducts } from "../lib/products";
+import FlashSaleCarousel from "../components/FlashSaleCarousel";
 
 const trustBadges = [
   {
@@ -70,6 +71,26 @@ export default async function HomePage() {
   const featuredProducts = await getFeaturedProducts();
   const flashSaleProducts = featuredProducts.filter((product) => product.productType === "Flash Sale").slice(0, 4);
   const flashSaleCarousel = flashSaleProducts.length > 0 ? [...flashSaleProducts, ...flashSaleProducts] : [];
+
+  // Popular products
+  const popularProducts = featuredProducts.slice(0, 4);
+
+  // Best Sellers
+  const bestSellerProducts = [...featuredProducts]
+    .sort((a, b) => (b.sold || 0) - (a.sold || 0))
+    .slice(0, 4);
+
+  // Helper to get discount percentage
+  const getDiscountValue = (discountStr?: string) => {
+    if (!discountStr) return 0;
+    const parsed = parseInt(discountStr.replace(/[^\d]/g, ""), 10);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  // Best Sales
+  const bestSaleProducts = [...featuredProducts]
+    .sort((a, b) => getDiscountValue(b.discount) - getDiscountValue(a.discount))
+    .slice(0, 4);
 
   const heroImages = [
     "https://i.pinimg.com/736x/de/1d/52/de1d520ea130ebaa7e850010c1011eab.jpg",
@@ -180,7 +201,6 @@ export default async function HomePage() {
               <FaBolt />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Flash sale</p>
               <h2 className="text-2xl font-semibold text-slate-900">FLASH SALE</h2>
             </div>
           </div>
@@ -190,92 +210,153 @@ export default async function HomePage() {
           </a>
         </div>
 
-        <div className="flash-sale-viewport mt-6 rounded-[2rem]">
-          <div className="flash-sale-track py-1">
-            {flashSaleCarousel.map((item, index) => (
-              <Link
-                key={`${item.id}-${index}`}
-                href={`/products/${item.id}`}
-                className="flash-sale-card group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
-              >
-                <div className="relative h-44 bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
+        <FlashSaleCarousel products={flashSaleProducts} />
+      </section>
+
+      {/* SECTION 1: POPULAR PRODUCTS */}
+      {popularProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Products Popular</h2>
+            </div>
+            <a className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b] hover:underline" href="/products?type=popular">
+              All products
+              <FaChevronRight className="text-xs" />
+            </a>
+          </div>
+
+          <div className="mt-6 grid gap-6 grid-cols-2 md:grid-cols-4">
+            {popularProducts.map((item) => (
+              <Link key={item.id} href={`/products/${item.id}`} className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
                   {getProductImage(item) ? (
                     <img alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={getProductImage(item) ?? undefined} />
                   ) : null}
-                  <span className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
-                    {item.discount}
-                  </span>
-                  <span className="absolute bottom-4 left-4 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-[#1b1202]">
-                    {item.promotion}
-                  </span>
+                  {item.discount && (
+                    <div className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+                      {item.discount}
+                    </div>
+                  )}
                 </div>
                 <div className="p-4">
                   <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
-                    <span>{item.brand}</span>
+                    <span className="font-medium text-[#0d3a6b]">{item.brand}</span>
                     <span>{item.category}</span>
                   </div>
-                  <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{item.name}</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">{item.name}</h3>
                   <div className="mt-3 flex items-center gap-2">
-                    <span className="text-base font-semibold text-rose-600">{item.price}</span>
+                    <span className="text-base font-semibold text-[#0d3a6b]">{item.price}</span>
                     <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
                   </div>
                   <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
                     <FaStar className="text-amber-400" /> {item.rating.toFixed(1)} | {item.sold} sold
                   </div>
+                  {item.promotion && <p className="mt-2 text-xs font-medium text-emerald-600">{item.promotion}</p>}
                 </div>
               </Link>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8" id="new-arrivals">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-semibold text-slate-900">Products Popular</h2>
+      {/* SECTION 2: BEST SELLERS */}
+      {bestSellerProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Best Sellers</h2>
+            </div>
+            <a className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b] hover:underline" href="/products?type=best-seller&sort=sold">
+              All products
+              <FaChevronRight className="text-xs" />
+            </a>
           </div>
-          <a className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b]" href="/products">
-            All products
-            <FaChevronRight />
-          </a>
-        </div>
 
-        <div className="mt-6 grid gap-6 md:grid-cols-4">
-          {featuredProducts.map((item) => (
-            <Link key={item.id} href={`/products/${item.id}`} className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-              <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
-                {getProductImage(item) ? (
-                  <img alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={getProductImage(item) ?? undefined} />
-                ) : null}
-                <div className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
-                  {item.discount}
+          <div className="mt-6 grid gap-6 grid-cols-2 md:grid-cols-4">
+            {bestSellerProducts.map((item) => (
+              <Link key={item.id} href={`/products/${item.id}`} className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
+                  {getProductImage(item) ? (
+                    <img alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={getProductImage(item) ?? undefined} />
+                  ) : null}
+                  {item.discount && (
+                    <div className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+                      {item.discount}
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="p-4">
-                <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
-                  <span>{item.brand}</span>
-                  <span>{item.category}</span>
+                <div className="p-4">
+                  <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+                    <span className="font-medium text-[#0d3a6b]">{item.brand}</span>
+                    <span>{item.category}</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">{item.name}</h3>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-base font-semibold text-[#0d3a6b]">{item.price}</span>
+                    <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <FaStar className="text-amber-400" /> {item.rating.toFixed(1)} | {item.sold} sold
+                  </div>
+                  {item.promotion && <p className="mt-2 text-xs font-medium text-emerald-600">{item.promotion}</p>}
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{item.name}</h3>
-                <p className="mt-2 line-clamp-2 text-xs text-slate-500">{item.description}</p>
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="text-base font-semibold text-[#0d3a6b]">{item.price}</span>
-                  <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* SECTION 3: BEST SALES */}
+      {bestSaleProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8" id="new-arrivals">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Best Deals</h2>
+            </div>
+            <a className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b] hover:underline" href="/products?type=best-sale&sort=discount">
+              All products
+              <FaChevronRight className="text-xs" />
+            </a>
+          </div>
+
+          <div className="mt-6 grid gap-6 grid-cols-2 md:grid-cols-4">
+            {bestSaleProducts.map((item) => (
+              <Link key={item.id} href={`/products/${item.id}`} className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
+                  {getProductImage(item) ? (
+                    <img alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src={getProductImage(item) ?? undefined} />
+                  ) : null}
+                  {item.discount && (
+                    <div className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+                      {item.discount}
+                    </div>
+                  )}
                 </div>
-                <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-                  <FaStar className="text-amber-400" /> {item.rating}.0 | {item.sold} sold
+                <div className="p-4">
+                  <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+                    <span className="font-medium text-[#0d3a6b]">{item.brand}</span>
+                    <span>{item.category}</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">{item.name}</h3>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-base font-semibold text-[#0d3a6b]">{item.price}</span>
+                    <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <FaStar className="text-amber-400" /> {item.rating.toFixed(1)} | {item.sold} sold
+                  </div>
+                  {item.promotion && <p className="mt-2 text-xs font-medium text-emerald-600">{item.promotion}</p>}
                 </div>
-                <p className="mt-2 text-xs font-medium text-emerald-600">{item.promotion}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">News</p>
             <h2 className="text-2xl font-semibold text-slate-900">Latest stories</h2>
           </div>
           <a className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b]" href="/blog">

@@ -33,7 +33,7 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
 
   const handleAdd = () => {
     if (!selectedSize) {
-      setError("Vui lòng chọn kích cỡ");
+      setError("Please select a size");
       return;
     }
     setError("");
@@ -52,7 +52,7 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
 
   const handleBuyNow = () => {
     if (!selectedSize) {
-      setError("Vui lòng chọn kích cỡ");
+      setError("Please select a size");
       return;
     }
     handleAdd();
@@ -64,9 +64,9 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
       <div className="mt-8 border-t border-slate-200 pt-8">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-900">
-            Chọn kích cỡ <span className="text-rose-500">*</span>
+            Select size <span className="text-rose-500">*</span>
           </h3>
-          <button className="text-sm text-[#0d3a6b] hover:underline" disabled={isOutOfStock}>Hướng dẫn chọn size</button>
+          <button className="text-sm text-[#0d3a6b] hover:underline" disabled={isOutOfStock}>Size Guide</button>
         </div>
         <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-7">
           {sizes.map(size => (
@@ -92,7 +92,7 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
 
       {product.colors && product.colors.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-sm font-semibold text-slate-900">Màu sắc</h3>
+          <h3 className="text-sm font-semibold text-slate-900">Colors</h3>
           <div className="mt-3 flex flex-wrap gap-2">
             {product.colors.map(color => (
               <button 
@@ -127,14 +127,14 @@ export default function AddToCart({ product, sizes }: AddToCartProps) {
           disabled={isOutOfStock}
           className="flex-1 rounded-full bg-[#0d3a6b] px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-[#0d3a6b]/30 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          Thêm vào giỏ hàng
+          Add to cart
         </button>
         <button 
           onClick={handleBuyNow}
           disabled={isOutOfStock}
           className="flex-1 rounded-full bg-rose-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-rose-600/30 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          Mua ngay
+          Buy now
         </button>
       </div>
     </div>
