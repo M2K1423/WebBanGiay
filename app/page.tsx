@@ -39,17 +39,20 @@ const newsItems = [
   {
     title: "Find Your Perfect Size",
     desc: "Easy tips for a comfy fit.",
-    meta: "Guide"
+    meta: "Guide",
+    id: "select-size-online"
   },
   {
     title: "Running Trends 2026",
     desc: "Hot pairs everyone is wearing.",
-    meta: "News"
+    meta: "News",
+    id: "sneaker-trend-2026"
   },
   {
     title: "Keep Your Shoes Fresh",
     desc: "Simple care tips that work.",
-    meta: "Blog"
+    meta: "Blog",
+    id: "how-to-clean-sneakers"
   }
 ];
 
@@ -359,10 +362,10 @@ export default async function HomePage() {
           <div>
             <h2 className="text-2xl font-semibold text-slate-900">Latest stories</h2>
           </div>
-          <a className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b]" href="/blog">
+          <Link className="inline-flex items-center gap-2 text-sm font-semibold !text-[#0d3a6b] hover:underline" href="/news">
             See all stories
-            <FaChevronRight />
-          </a>
+            <FaChevronRight className="text-xs" />
+          </Link>
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-3">
@@ -374,10 +377,10 @@ export default async function HomePage() {
               </div>
               <h3 className="mt-4 text-base font-semibold text-slate-900">{item.title}</h3>
               <p className="mt-2 text-sm text-slate-500">{item.desc}</p>
-              <a className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b]" href="/blog">
+              <Link className="mt-4 inline-flex items-center gap-2 text-sm font-semibold !text-[#0d3a6b] hover:underline" href={`/news/${item.id}`}>
                 Read more
-                <FaChevronRight />
-              </a>
+                <FaChevronRight className="text-xs" />
+              </Link>
             </article>
           ))}
         </div>

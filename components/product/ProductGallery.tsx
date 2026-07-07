@@ -30,7 +30,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         )}
       </div>
 
-      {product.imageUrls.length > 1 && (
+      {product.imageUrls.length >= 1 && (
         <div className="grid grid-cols-4 gap-4">
           {product.imageUrls.map((url, index) => {
             const isActive = index === selectedIndex;
