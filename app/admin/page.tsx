@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { FaChartPie, FaBoxOpen, FaCartShopping, FaUsers } from "react-icons/fa6";
 import { getApiBaseUrl } from "@/features/auth/utils";
+import { getFirebaseAuth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 type OrderItem = {
   status?: string;
@@ -65,17 +67,28 @@ export default function AdminDashboard() {
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
 
   useEffect(() => {
-    // In a real app, you would fetch these from a /api/admin/stats endpoint
-    // For now, we fetch them individually
-    const apiBaseUrl = getApiBaseUrl();
+    const auth = getFirebaseAuth();
+    if (!auth) return;
 
-    Promise.all([
-      fetch(`${apiBaseUrl}/products`).then(res => res.json()),
-      fetch(`${apiBaseUrl}/orders/all`).then(res => res.json()),
-      fetch(`${apiBaseUrl}/users`).then(res => res.json()),
-    ])
-      .then(([products, orders, users]) => {
-        const orderList = Array.isArray(orders) ? (orders as OrderItem[]) : [];
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+
+      try {
+        const token = await user.getIdToken();
+        const apiBaseUrl = getApiBaseUrl();
+        const headers = {
+          "Authorization": `Bearer ${token}`
+        };
+
+        const [products, orders, users] = await Promise.all([
+          fetch(`${apiBaseUrl}/products`, { headers }).then(res => res.json()),
+          fetch(`${apiBaseUrl}/orders/all?limit=1000`, { headers }).then(res => res.json()),
+          fetch(`${apiBaseUrl}/users`, { headers }).then(res => res.json()),
+        ]);
+
+        const orderList = orders && Array.isArray(orders.orders)
+          ? (orders.orders as OrderItem[])
+          : (Array.isArray(orders) ? (orders as OrderItem[]) : []);
         const recentMonths = getRecentMonths(6);
 
         const statusCounts = orderList.reduce<Record<string, number>>((acc, order) => {
@@ -112,14 +125,20 @@ export default function AdminDashboard() {
         }));
 
         setStats({
-          products: products.length || 0,
-          orders: orders.length || 0,
-          users: users.length || 0,
+          products: Array.isArray(products) ? products.length : 0,
+          orders: orders && typeof orders.totalCount === "number"
+            ? orders.totalCount
+            : (Array.isArray(orders) ? orders.length : 0),
+          users: Array.isArray(users) ? users.length : 0,
         });
         setStatusStats(statusRows);
         setMonthlyStats(recentMonths.map((month) => monthlyMap[month.key]));
-      })
-      .catch(console.error);
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu dashboard:", err);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const totalRevenue = monthlyStats.reduce((s, m) => s + (m.revenue || 0), 0);
