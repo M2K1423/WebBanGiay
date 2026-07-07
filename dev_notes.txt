@@ -1,0 +1,4 @@
+Initial roadmap for web-shoes client. Planned views: Home, Category, Details, Checkout, and Admin.
+Added CSS variable tokens for dark blue colors, margins, and transition-all animations.
+Cleaned up SiteChrome shell and wrapper components to prevent unnecessary re-renders.
+Documented Firebase onAuthStateChanged and cookie-based auth token synchronization.
