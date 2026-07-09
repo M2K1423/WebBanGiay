@@ -29,27 +29,29 @@ export default function AuthClient() {
         <div className="auth-card-top">
           <div>
             <p className="eyebrow">Account</p>
-            <h2>{mode === "login" ? "Dang nhap" : "Dang ky"}</h2>
+            <h2>{mode === "login" ? "Dang nhap" : mode === "forgot-password" ? "Quen mat khau" : "Dang ky"}</h2>
           </div>
           <span className="auth-badge">Firebase UI</span>
         </div>
 
-        <div className="auth-switch" role="tablist" aria-label="Chuyen doi dang nhap va dang ky">
-          <button
-            type="button"
-            data-active={mode === "login"}
-            onClick={() => setMode("login")}
-          >
-            Dang nhap
-          </button>
-          <button
-            type="button"
-            data-active={mode === "register"}
-            onClick={() => setMode("register")}
-          >
-            Dang ky
-          </button>
-        </div>
+        {mode !== "forgot-password" && (
+          <div className="auth-switch" role="tablist" aria-label="Chuyen doi dang nhap va dang ky">
+            <button
+              type="button"
+              data-active={mode === "login"}
+              onClick={() => setMode("login")}
+            >
+              Dang nhap
+            </button>
+            <button
+              type="button"
+              data-active={mode === "register"}
+              onClick={() => setMode("register")}
+            >
+              Dang ky
+            </button>
+          </div>
+        )}
 
         {user ? (
           <div className="auth-state">
@@ -83,18 +85,32 @@ export default function AuthClient() {
               />
             </div>
 
-            <div className="auth-field">
-              <label htmlFor="password">Mat khau</label>
-              <input
-                id="password"
-                type="password"
-                autoComplete={mode === "register" ? "new-password" : "current-password"}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Nhap mat khau"
-                required
-              />
-            </div>
+            {mode !== "forgot-password" && (
+              <div className="auth-field">
+                <label htmlFor="password">Mat khau</label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete={mode === "register" ? "new-password" : "current-password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Nhap mat khau"
+                  required
+                />
+              </div>
+            )}
+
+            {mode === "login" && (
+              <div className="text-right -mt-2">
+                <button
+                  type="button"
+                  onClick={() => setMode("forgot-password")}
+                  className="text-xs text-[#0d3a6b] hover:underline font-bold"
+                >
+                  Quên mật khẩu?
+                </button>
+              </div>
+            )}
 
             {mode === "register" ? (
               <div className="auth-field">
@@ -115,42 +131,56 @@ export default function AuthClient() {
             {status ? <p className="auth-status">{status}</p> : null}
 
             <button className="auth-submit" type="submit" disabled={loading}>
-              {loading ? "Dang xu ly..." : mode === "login" ? "Dang nhap" : "Tao tai khoan"}
+              {loading ? "Dang xu ly..." : mode === "login" ? "Dang nhap" : mode === "forgot-password" ? "Gửi link reset mật khẩu" : "Tao tai khoan"}
             </button>
 
-            <div className="auth-divider">
-              <span>hoac</span>
-            </div>
+            {mode === "forgot-password" && (
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="text-xs text-center text-[#0d3a6b] hover:underline font-bold mt-2"
+              >
+                Quay lại Đăng nhập
+              </button>
+            )}
 
-            <div className="auth-social">
-              <button
-                type="button"
-                className="auth-social-btn auth-social-google"
-                onClick={() => handleSocialLogin("google")}
-                disabled={loading}
-                title="Dang nhap voi Google"
-              >
-                🔍 Google
-              </button>
-              <button
-                type="button"
-                className="auth-social-btn auth-social-facebook"
-                onClick={() => handleSocialLogin("facebook")}
-                disabled={loading}
-                title="Dang nhap voi Facebook"
-              >
-                f Facebook
-              </button>
-              <button
-                type="button"
-                className="auth-social-btn auth-social-github"
-                onClick={() => handleSocialLogin("github")}
-                disabled={loading}
-                title="Dang nhap voi GitHub"
-              >
-                ⚙ GitHub
-              </button>
-            </div>
+            {mode !== "forgot-password" && (
+              <>
+                <div className="auth-divider">
+                  <span>hoac</span>
+                </div>
+
+                <div className="auth-social">
+                  <button
+                    type="button"
+                    className="auth-social-btn auth-social-google"
+                    onClick={() => handleSocialLogin("google")}
+                    disabled={loading}
+                    title="Dang nhap voi Google"
+                  >
+                    🔍 Google
+                  </button>
+                  <button
+                    type="button"
+                    className="auth-social-btn auth-social-facebook"
+                    onClick={() => handleSocialLogin("facebook")}
+                    disabled={loading}
+                    title="Dang nhap voi Facebook"
+                  >
+                    f Facebook
+                  </button>
+                  <button
+                    type="button"
+                    className="auth-social-btn auth-social-github"
+                    onClick={() => handleSocialLogin("github")}
+                    disabled={loading}
+                    title="Dang nhap voi GitHub"
+                  >
+                    ⚙ GitHub
+                  </button>
+                </div>
+              </>
+            )}
           </form>
         ) : (
           <div className="auth-setup">

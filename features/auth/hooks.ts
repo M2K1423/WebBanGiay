@@ -8,7 +8,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signOut
+  signOut,
+  sendPasswordResetEmail
 } from "firebase/auth";
 import {
   getFirebaseAuth,
@@ -133,10 +134,13 @@ export function useAuthLogic() {
           const credential = await createUserWithEmailAndPassword(auth, email, password);
           await syncActiveUser(credential.user);
           setStatus("Dang ky thanh cong. Tai khoan da duoc luu trong Firebase Auth.");
-        } else {
+        } else if (mode === "login") {
           const credential = await signInWithEmailAndPassword(auth, email, password);
           await syncActiveUser(credential.user);
           setStatus("Dang nhap thanh cong.");
+        } else if (mode === "forgot-password") {
+          await sendPasswordResetEmail(auth, email);
+          setStatus("Link dat lai mat khau da duoc gui qua email. Vui long kiem tra hop thu den.");
         }
       } catch (submitError) {
         setError(getFriendlyErrorMessage(submitError));
@@ -144,7 +148,7 @@ export function useAuthLogic() {
         setLoading(false);
       }
     },
-    [mode, email, password, confirmPassword]
+    [mode, email, password, confirmPassword, syncActiveUser]
   );
 
   const handleSocialLogin = useCallback(

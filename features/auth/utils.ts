@@ -7,7 +7,7 @@ export function getFriendlyErrorMessage(error: unknown): string {
   return "Co loi xay ra. Vui long thu lai.";
 }
 
-export type AuthMode = "login" | "register";
+export type AuthMode = "login" | "register" | "forgot-password";
 
 export function getApiBaseUrl() {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
