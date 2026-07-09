@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FaStar, FaCheck, FaEyeSlash, FaRegStar } from "react-icons/fa6";
 import { getApiBaseUrl } from "@/features/auth/utils";
 import { getFirebaseAuth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 type Review = {
   _id: string;
@@ -31,30 +32,45 @@ export default function AdminReviewsPage() {
 
   const apiBaseUrl = getApiBaseUrl();
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (token: string) => {
     setLoading(true);
     try {
-      const auth = getFirebaseAuth();
-      const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
-      const headers: any = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      const headers: any = {
+        "Authorization": `Bearer ${token}`
+      };
 
       const response = await fetch(`${apiBaseUrl}/reviews/admin`, { headers });
       if (response.ok) {
         const data = await response.json();
+        console.log("Reviews data loaded successfully:", data);
         setReviews(Array.isArray(data) ? data : []);
+      } else {
+        const errText = await response.text();
+        console.error(`Failed to fetch reviews. Status: ${response.status}, Error: ${errText}`);
       }
     } catch (err) {
-      console.error("Failed to fetch reviews:", err);
+      console.error("Failed to fetch reviews with exception:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    void fetchReviews();
+    const auth = getFirebaseAuth();
+    if (!auth) return;
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        const token = await user.getIdToken();
+        void fetchReviews(token);
+      } catch (err) {
+        console.error("Failed to get token:", err);
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
