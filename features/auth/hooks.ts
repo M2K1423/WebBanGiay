@@ -122,6 +122,12 @@ export function useAuthLogic() {
         return;
       }
 
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError("Định dạng email không hợp lệ (ví dụ: name@example.com).");
+        return;
+      }
+
       if (mode === "register" && password !== confirmPassword) {
         setError("Mat khau xac nhan khong khop.");
         return;
@@ -139,10 +145,13 @@ export function useAuthLogic() {
           await syncActiveUser(credential.user);
           setStatus("Dang nhap thanh cong.");
         } else if (mode === "forgot-password") {
+          console.log("Firebase Auth: Bắt đầu gửi yêu cầu reset mật khẩu cho email:", email);
           await sendPasswordResetEmail(auth, email);
+          console.log("Firebase Auth: Gửi yêu cầu thành công!");
           setStatus("Link dat lai mat khau da duoc gui qua email. Vui long kiem tra hop thu den.");
         }
-      } catch (submitError) {
+      } catch (submitError: any) {
+        console.error("Firebase Auth: Gặp lỗi khi xử lý biểu mẫu:", submitError);
         setError(getFriendlyErrorMessage(submitError));
       } finally {
         setLoading(false);
