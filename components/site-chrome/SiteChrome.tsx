@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import ChatWidget from "@/features/chat/ChatWidget";
+import AiChatWidget from "@/features/chat/AiChatWidget";
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -19,7 +20,12 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
       ) : null}
       {children}
       {!isAdminRoute ? <Footer /> : null}
-      {!isAdminRoute ? <ChatWidget /> : null}
+      {!isAdminRoute ? (
+        <>
+          <ChatWidget />
+          <AiChatWidget />
+        </>
+      ) : null}
     </>
   );
 }

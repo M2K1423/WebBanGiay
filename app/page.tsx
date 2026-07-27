@@ -39,17 +39,20 @@ const newsItems = [
   {
     title: "Find Your Perfect Size",
     desc: "Easy tips for a comfy fit.",
-    meta: "Guide"
+    meta: "Guide",
+    slug: "find-your-perfect-size"
   },
   {
     title: "Running Trends 2026",
     desc: "Hot pairs everyone is wearing.",
-    meta: "News"
+    meta: "News",
+    slug: "running-trends-2026"
   },
   {
     title: "Keep Your Shoes Fresh",
     desc: "Simple care tips that work.",
-    meta: "Blog"
+    meta: "Blog",
+    slug: "keep-your-shoes-fresh"
   }
 ];
 
@@ -374,7 +377,7 @@ export default async function HomePage() {
               </div>
               <h3 className="mt-4 text-base font-semibold text-slate-900">{item.title}</h3>
               <p className="mt-2 text-sm text-slate-500">{item.desc}</p>
-              <a className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b]" href="/blog">
+              <a className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#0d3a6b]" href={`/blog/${item.slug}`}>
                 Read more
                 <FaChevronRight />
               </a>

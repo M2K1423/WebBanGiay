@@ -527,7 +527,7 @@ export default function Header() {
           <Link href="/sale" className="flex items-center gap-2 text-white/90 hover:text-white">
             <FaBolt className="text-base" /> Sale
           </Link>
-          <Link href="/news" className="flex items-center gap-2 text-white/90 hover:text-white">
+          <Link href="/blog" className="flex items-center gap-2 text-white/90 hover:text-white">
             <FaNewspaper className="text-base" /> News
           </Link>
         </div>

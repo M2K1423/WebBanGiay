@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { FaChartPie, FaBoxOpen, FaCartShopping, FaUsers } from "react-icons/fa6";
 import { getApiBaseUrl } from "@/features/auth/utils";
+import { getFirebaseAuth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 type OrderItem = {
   status?: string;
@@ -63,63 +65,103 @@ export default function AdminDashboard() {
   const [statusStats, setStatusStats] = useState<StatusStat[]>([]);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStat[]>([]);
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
   useEffect(() => {
-    // In a real app, you would fetch these from a /api/admin/stats endpoint
-    // For now, we fetch them individually
-    const apiBaseUrl = getApiBaseUrl();
+    const auth = getFirebaseAuth();
+    if (!auth) return;
 
-    Promise.all([
-      fetch(`${apiBaseUrl}/products`).then(res => res.json()),
-      fetch(`${apiBaseUrl}/orders/all`).then(res => res.json()),
-      fetch(`${apiBaseUrl}/users`).then(res => res.json()),
-    ])
-      .then(([products, orders, users]) => {
-        const orderList = Array.isArray(orders) ? (orders as OrderItem[]) : [];
-        const recentMonths = getRecentMonths(6);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) return;
 
-        const statusCounts = orderList.reduce<Record<string, number>>((acc, order) => {
-          const key = (order.status ?? "pending").toLowerCase();
-          acc[key] = (acc[key] ?? 0) + 1;
-          return acc;
-        }, {});
+      try {
+        const apiBaseUrl = getApiBaseUrl();
+        const token = await firebaseUser.getIdToken();
+        const headers: any = {};
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
 
-        const monthlyMap = recentMonths.reduce<Record<string, MonthlyStat>>((acc, month) => {
-          acc[month.key] = { label: month.label, count: 0, revenue: 0 };
-          return acc;
-        }, {});
+        const [productsRes, ordersRes, usersRes] = await Promise.all([
+          fetch(`${apiBaseUrl}/products`),
+          fetch(`${apiBaseUrl}/orders/all?limit=1000`, { headers }),
+          fetch(`${apiBaseUrl}/users`, { headers })
+        ]);
 
-        orderList.forEach((order) => {
-          if (!order.createdAt) {
-            return;
-          }
+        if (productsRes.ok && ordersRes.ok && usersRes.ok) {
+          const products = await productsRes.json();
+          const ordersResult = await ordersRes.json();
+          const users = await usersRes.json();
 
-          const createdAt = new Date(order.createdAt);
-          const key = getMonthKey(createdAt);
-          const current = monthlyMap[key];
+          const orderList = ordersResult && typeof ordersResult === "object" && Array.isArray(ordersResult.orders)
+            ? (ordersResult.orders as OrderItem[])
+            : [];
+          const totalOrdersCount = ordersResult && typeof ordersResult === "object" && typeof ordersResult.totalCount === "number"
+            ? ordersResult.totalCount
+            : orderList.length;
 
-          if (current) {
-            current.count += 1;
-            current.revenue += Number(order.total ?? 0);
-          }
-        });
+          const recentMonths = getRecentMonths(6);
 
-        const statusRows = Object.entries(STATUS_META).map(([key, meta]) => ({
-          key,
-          label: meta.label,
-          count: statusCounts[key] ?? 0,
-          color: meta.color
-        }));
+          const statusCounts = orderList.reduce<Record<string, number>>((acc, order) => {
+            const key = (order.status ?? "pending").toLowerCase();
+            acc[key] = (acc[key] ?? 0) + 1;
+            return acc;
+          }, {});
 
-        setStats({
-          products: products.length || 0,
-          orders: orders.length || 0,
-          users: users.length || 0,
-        });
-        setStatusStats(statusRows);
-        setMonthlyStats(recentMonths.map((month) => monthlyMap[month.key]));
-      })
-      .catch(console.error);
+          const monthlyMap = recentMonths.reduce<Record<string, MonthlyStat>>((acc, month) => {
+            acc[month.key] = { label: month.label, count: 0, revenue: 0 };
+            return acc;
+          }, {});
+
+          orderList.forEach((order) => {
+            if (!order.createdAt) {
+              return;
+            }
+
+            const createdAt = new Date(order.createdAt);
+            const key = getMonthKey(createdAt);
+            const current = monthlyMap[key];
+
+            if (current) {
+              current.count += 1;
+              current.revenue += Number(order.total ?? 0);
+            }
+          });
+
+          const statusRows = Object.entries(STATUS_META).map(([key, meta]) => ({
+            key,
+            label: meta.label,
+            count: statusCounts[key] ?? 0,
+            color: meta.color
+          }));
+
+          // Sort and slice top selling products
+          const sortedProducts = Array.isArray(products)
+            ? [...products].sort((a, b) => (b.sold || 0) - (a.sold || 0)).slice(0, 5)
+            : [];
+          setTopProducts(sortedProducts);
+
+          // Sort and slice recent orders
+          const sortedOrders = [...orderList]
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+            .slice(0, 5);
+          setRecentOrders(sortedOrders);
+
+          setStats({
+            products: products.length || 0,
+            orders: totalOrdersCount,
+            users: users.length || 0,
+          });
+          setStatusStats(statusRows);
+          setMonthlyStats(recentMonths.map((month) => monthlyMap[month.key]));
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard stats:", err);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const totalRevenue = monthlyStats.reduce((s, m) => s + (m.revenue || 0), 0);
@@ -303,6 +345,104 @@ export default function AdminDashboard() {
             )}
           </div>
         </section>
+      </div>
+
+      {/* SECTION: Recent Orders & Top Selling Products */}
+      <div className="mt-8 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        
+        {/* Recent Orders Card */}
+        <section className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Đơn hàng mới nhất</h2>
+            <p className="text-sm text-slate-500">Các đơn hàng vừa được đặt gần đây</p>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
+                  <th className="pb-3 font-semibold">Khách hàng</th>
+                  <th className="pb-3 font-semibold">Thời gian</th>
+                  <th className="pb-3 font-semibold">Tổng tiền</th>
+                  <th className="pb-3 font-semibold text-center">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {recentOrders.map((order, idx) => {
+                  const meta = STATUS_META[order.status?.toLowerCase() || "pending"] || { label: order.status || "Chờ xử lý", color: "bg-amber-500" };
+                  return (
+                    <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3 font-semibold text-slate-800">
+                        {order.shippingAddress?.fullName || "Khách vãng lai"}
+                      </td>
+                      <td className="py-3 text-slate-500 font-medium">
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString("vi-VN", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        }) : "-"}
+                      </td>
+                      <td className="py-3 font-bold text-slate-800">
+                        {formatMoney(order.total || 0)}
+                      </td>
+                      <td className="py-3 text-center">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white ${meta.color}`}>
+                          {meta.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {recentOrders.length === 0 && (
+            <p className="text-center text-sm text-slate-400 py-6 border border-dashed border-slate-200 rounded-xl">
+              Chưa có đơn hàng nào.
+            </p>
+          )}
+        </section>
+
+        {/* Top Products Card */}
+        <section className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Sản phẩm bán chạy</h2>
+            <p className="text-sm text-slate-500">Top 5 sản phẩm có lượng tiêu thụ cao nhất</p>
+          </div>
+          
+          <div className="space-y-3.5">
+            {topProducts.map((product, idx) => (
+              <div key={idx} className="flex items-center gap-3.5 p-2 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                {product.imageUrls?.[0] ? (
+                  <img
+                    src={product.imageUrls[0]}
+                    alt={product.name}
+                    className="h-10 w-10 object-cover rounded-lg border border-slate-100 bg-slate-50 shrink-0"
+                  />
+                ) : (
+                  <div className="h-10 w-10 bg-slate-100 rounded-lg flex items-center justify-center shrink-0 text-slate-400">
+                    👟
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <h4 className="text-xs font-bold text-slate-800 truncate">{product.name}</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">{product.brand} • {product.category}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-bold text-emerald-600">Đã bán {product.sold || 0}</p>
+                  <p className="text-[10px] text-slate-400 font-bold">{product.price}</p>
+                </div>
+              </div>
+            ))}
+            {topProducts.length === 0 && (
+              <p className="text-center text-sm text-slate-400 py-6 border border-dashed border-slate-200 rounded-xl">
+                Chưa có sản phẩm nào.
+              </p>
+            )}
+          </div>
+        </section>
+        
       </div>
     </div>
   );
