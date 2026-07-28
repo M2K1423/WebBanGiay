@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { getFeaturedProducts } from "../lib/products";
 import FlashSaleCarousel from "../components/FlashSaleCarousel";
+import RecommendedProducts from "../components/RecommendedProducts";
 
 const trustBadges = [
   {
@@ -356,6 +357,9 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* SECTION 4: PERSONALIZED RECOMMENDATIONS */}
+      <RecommendedProducts />
 
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4">

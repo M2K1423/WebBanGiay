@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FeaturedProduct } from "@/lib/products";
 
 type ProductGalleryProps = {
@@ -10,6 +10,21 @@ type ProductGalleryProps = {
 export default function ProductGallery({ product }: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selectedImage = product.imageUrls[selectedIndex] ?? product.imageUrls[0] ?? null;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const viewedStr = localStorage.getItem("myshoes_viewed_products");
+        let viewed = viewedStr ? JSON.parse(viewedStr) : [];
+        if (!Array.isArray(viewed)) viewed = [];
+        viewed = viewed.filter((id: string) => id !== product.id);
+        viewed.unshift(product.id);
+        localStorage.setItem("myshoes_viewed_products", JSON.stringify(viewed.slice(0, 10)));
+      } catch (err) {
+        console.error("Lỗi lưu lịch sử xem sản phẩm:", err);
+      }
+    }
+  }, [product.id]);
 
   return (
     <div className="space-y-4">

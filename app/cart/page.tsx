@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaBagShopping, FaChevronRight, FaMinus, FaPlus, FaTrashCan } from "react-icons/fa6";
 import { useCart } from "@/features/cart/CartContext";
+import CartRecommendations from "@/components/cart/CartRecommendations";
 
 function formatPrice(price: number): string {
   return price.toLocaleString("vi-VN") + "đ";
@@ -68,7 +69,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="h-[calc(100vh-178px)] overflow-hidden bg-[#f5f7fb]">
+    <main className="min-h-[calc(100vh-178px)] bg-[#f5f7fb] pb-16">
       <div className="border-b border-slate-100 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-2 text-sm text-slate-500">
@@ -79,7 +80,7 @@ export default function CartPage() {
         </div>
       </div>
 
-      <div className="mx-auto flex h-[calc(100%-45px)] max-w-7xl flex-col px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
             <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0d3a6b]">Shopping Cart</p>
@@ -100,8 +101,8 @@ export default function CartPage() {
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_350px]">
-          <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/60">
+        <div className="grid gap-5 xl:grid-cols-[1fr_350px]">
+          <section className="flex flex-col rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/60">
             <div className="hidden border-b border-slate-100 bg-slate-50/80 px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500 md:grid md:grid-cols-[minmax(280px,1fr)_110px_135px_120px_40px] md:items-center">
               <span>Product</span>
               <span>Price</span>
@@ -110,7 +111,7 @@ export default function CartPage() {
               <span />
             </div>
 
-            <div className="min-h-0 flex-1 divide-y divide-slate-100 overflow-y-auto px-5">
+            <div className="divide-y divide-slate-100 px-5">
               {items.map((item) => {
                 const itemTotal = parsePrice(item.price) * item.quantity;
 
@@ -253,6 +254,9 @@ export default function CartPage() {
             </div>
           </aside>
         </div>
+
+        {/* Suggested accessories section */}
+        <CartRecommendations />
       </div>
     </main>
   );

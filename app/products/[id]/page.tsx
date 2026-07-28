@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FaChevronRight, FaStar, FaShieldHeart, FaArrowsRotate, FaMedal } from "react-icons/fa6";
-import { getProductById, getProductImage, getProductsByCategory } from "@/lib/products";
+import { getProductById, getProductImage } from "@/lib/products";
 import AddToCart from "@/features/cart/AddToCart";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductReviews from "@/features/reviews/ProductReviews";
+import ProductDetailRecommendations from "@/components/product/ProductDetailRecommendations";
 
 export async function generateMetadata({
   params
@@ -38,9 +39,6 @@ export default async function ProductDetailPage({
   if (!product) {
     notFound();
   }
-
-  const relatedProducts = await getProductsByCategory(product.category);
-  const filteredRelated = relatedProducts.filter(p => p.id !== product.id).slice(0, 4);
 
   return (
     <main className="min-h-screen bg-[#f5f7fb]">
@@ -147,43 +145,8 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      {/* Related Products */}
-      {filteredRelated.length > 0 && (
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-semibold text-slate-900 mb-8">Related Products</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {filteredRelated.map((item) => {
-              const relatedImg = getProductImage(item);
-              return (
-                <Link
-                  key={item.id}
-                  href={`/products/${item.id}`}
-                  className="group overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1"
-                >
-                  <div className="relative h-48 overflow-hidden bg-gradient-to-br from-[#f7f9ff] to-[#dbe7ff]">
-                    {relatedImg ? (
-                      <img
-                        src={relatedImg}
-                        alt={item.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-4xl">👟</div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{item.name}</h3>
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-base font-semibold text-rose-600">{item.price}</span>
-                      <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/* Personalized Recommendations Section */}
+      <ProductDetailRecommendations currentProduct={product} />
     </main>
   );
 }
