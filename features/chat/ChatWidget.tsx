@@ -35,6 +35,31 @@ export default function ChatWidget() {
   }, []);
 
   useEffect(() => {
+    const handleOpenHumanChat = (event: Event) => {
+      const customEvent = event as CustomEvent<{ initialMessage?: string }>;
+      setOpen(true);
+      if (customEvent.detail?.initialMessage) {
+        setDraft(customEvent.detail.initialMessage);
+      }
+    };
+    const handleCloseHumanChat = () => {
+      setOpen(false);
+    };
+    window.addEventListener("myshoes_open_human_chat", handleOpenHumanChat);
+    window.addEventListener("myshoes_close_human_chat", handleCloseHumanChat);
+    return () => {
+      window.removeEventListener("myshoes_open_human_chat", handleOpenHumanChat);
+      window.removeEventListener("myshoes_close_human_chat", handleCloseHumanChat);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      window.dispatchEvent(new CustomEvent("myshoes_close_ai_chat"));
+    }
+  }, [open]);
+
+  useEffect(() => {
     socketRef.current?.disconnect();
     socketRef.current = null;
     setConversation(null);

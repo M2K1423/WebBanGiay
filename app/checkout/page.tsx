@@ -65,6 +65,99 @@ export default function CheckoutPage() {
     paymentMethod: "cod"
   });
 
+  // Geolocation and map states
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isSearchingMap, setIsSearchingMap] = useState(false);
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Trình duyệt của bạn không hỗ trợ định vị.");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setCoords({ lat: latitude, lng: longitude });
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            {
+              headers: {
+                "Accept-Language": "vi,en"
+              }
+            }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.display_name) {
+              setFormData((prev) => ({ ...prev, address: data.display_name }));
+            } else {
+              setFormData((prev) => ({ ...prev, address: `${latitude}, ${longitude}` }));
+            }
+          } else {
+            setFormData((prev) => ({ ...prev, address: `${latitude}, ${longitude}` }));
+          }
+        } catch (error) {
+          console.error("Lỗi giải mã địa chỉ:", error);
+          setFormData((prev) => ({ ...prev, address: `${latitude}, ${longitude}` }));
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        console.error("Lỗi định vị:", error);
+        let errorMsg = "Không thể lấy vị trí hiện tại.";
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = "Quyền truy cập vị trí bị từ chối. Vui lòng cho phép quyền truy cập vị trí trong cài đặt trình duyệt.";
+        }
+        alert(errorMsg);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const searchAddressOnMap = async () => {
+    const addressVal = formData.address.trim();
+    if (!addressVal) {
+      alert("Vui lòng nhập địa chỉ trước khi tìm trên bản đồ.");
+      return;
+    }
+
+    setIsSearchingMap(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressVal)}&limit=1`,
+        {
+          headers: {
+            "Accept-Language": "vi,en"
+          }
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const newLat = parseFloat(data[0].lat);
+          const newLng = parseFloat(data[0].lon);
+          setCoords({ lat: newLat, lng: newLng });
+        } else {
+          alert("Không tìm thấy vị trí trên bản đồ cho địa chỉ này. Hãy thử nhập chi tiết hơn.");
+        }
+      } else {
+        alert("Không thể kết nối với dịch vụ bản đồ lúc này.");
+      }
+    } catch (error) {
+      console.error("Lỗi tìm kiếm bản đồ:", error);
+      alert("Đã xảy ra lỗi khi kết nối với dịch vụ bản đồ.");
+    } finally {
+      setIsSearchingMap(false);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
     if (mounted && items.length === 0 && !orderPlaced) {
@@ -283,9 +376,48 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Shipping Address <span className="text-rose-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="address" className="text-sm font-medium text-slate-700">
+                      Shipping Address <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleGetCurrentLocation}
+                        disabled={isLocating}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#0d3a6b]/5 hover:bg-[#0d3a6b]/10 text-[#0d3a6b] text-xs font-semibold px-2.5 py-1.5 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                      >
+                        {isLocating ? (
+                          <>
+                            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#0d3a6b] border-t-transparent"></span>
+                            Đang lấy vị trí...
+                          </>
+                        ) : (
+                          <>
+                            <FaLocationDot className="text-[10px]" />
+                            Vị trí hiện tại
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={searchAddressOnMap}
+                        disabled={isSearchingMap || !formData.address.trim()}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                      >
+                        {isSearchingMap ? (
+                          <>
+                            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-600 border-t-transparent"></span>
+                            Đang tìm...
+                          </>
+                        ) : (
+                          <>
+                            🔍 Xem bản đồ
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                   <input
                     type="text"
                     id="address"
@@ -296,6 +428,34 @@ export default function CheckoutPage() {
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-[#0d3a6b] focus:outline-none focus:ring-1 focus:ring-[#0d3a6b]"
                     placeholder="House number, street, ward, district, city"
                   />
+
+                  {/* Google Map Embed */}
+                  {coords && (
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300">
+                      <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          🗺️ Bản đồ Google Maps (Tọa độ: {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)})
+                        </span>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#0d3a6b] font-bold hover:underline"
+                        >
+                          Mở Google Maps ↗
+                        </a>
+                      </div>
+                      <div className="relative w-full h-[250px]">
+                        <iframe
+                          title="Google Maps Location"
+                          src={`https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=16&output=embed`}
+                          className="absolute inset-0 w-full h-full border-0"
+                          allowFullScreen
+                          loading="lazy"
+                        ></iframe>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">

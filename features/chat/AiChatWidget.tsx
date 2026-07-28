@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { FaArrowRotateLeft, FaPaperPlane, FaRobot, FaTrash, FaXmark } from "react-icons/fa6";
+import { FaArrowRotateLeft, FaPaperPlane, FaRobot, FaTrash, FaXmark, FaHeadset, FaImage } from "react-icons/fa6";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { getApiBaseUrl } from "@/features/auth/utils";
 
@@ -13,6 +13,7 @@ type AiMessage = {
   role: "user" | "model";
   content: string;
   createdAt: string;
+  imageUrl?: string;
 };
 
 // Custom SVG icons for Gemini-style branding
@@ -93,8 +94,11 @@ export default function AiChatWidget() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("Đang trực tuyến");
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [pendingImagePreview, setPendingImagePreview] = useState("");
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const getWelcomeMessage = (): AiMessage => ({
     id: "welcome",
@@ -112,6 +116,22 @@ export default function AiChatWidget() {
     }
     return onAuthStateChanged(auth, setUser);
   }, []);
+
+  useEffect(() => {
+    const handleCloseAiChat = () => {
+      setOpen(false);
+    };
+    window.addEventListener("myshoes_close_ai_chat", handleCloseAiChat);
+    return () => {
+      window.removeEventListener("myshoes_close_ai_chat", handleCloseAiChat);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      window.dispatchEvent(new CustomEvent("myshoes_close_human_chat"));
+    }
+  }, [open]);
 
   // Load chat history from localStorage when user logged in
   useEffect(() => {
@@ -151,21 +171,72 @@ export default function AiChatWidget() {
     }
   };
 
+  // Revoke blob URL on unmount or preview changes
+  useEffect(() => () => {
+    if (pendingImagePreview) URL.revokeObjectURL(pendingImagePreview);
+  }, [pendingImagePreview]);
+
+  const prepareImage = (file: File) => {
+    const CHAT_IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+    const MAX_CHAT_IMAGE_SIZE = 5 * 1024 * 1024;
+    if (!CHAT_IMAGE_ACCEPT.includes(file.type) || file.size > MAX_CHAT_IMAGE_SIZE) {
+      setError(file.size > MAX_CHAT_IMAGE_SIZE ? "Ảnh không được lớn hơn 5 MB." : "Chỉ hỗ trợ JPG, PNG, WEBP và GIF.");
+      return;
+    }
+    setPendingImage(file);
+    setPendingImagePreview(URL.createObjectURL(file));
+    setError(null);
+  };
+
+  const selectImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) prepareImage(file);
+  };
+
+  const toBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+
   // Submit message
   const submitMessage = async (contentToSend: string) => {
-    if (!contentToSend.trim() || !user || loading) return;
+    if ((!contentToSend.trim() && !pendingImage) || !user || loading) return;
+
+    let imagePayload: { base64: string; mimeType: string } | undefined = undefined;
+    let localImageUrl: string | undefined = undefined;
+
+    if (pendingImage) {
+      try {
+        const base64 = await toBase64(pendingImage);
+        imagePayload = { base64, mimeType: pendingImage.type };
+        localImageUrl = pendingImagePreview;
+      } catch (err) {
+        console.error("Base64 convert error", err);
+      }
+    }
 
     const userMsg: AiMessage = {
       id: crypto.randomUUID(),
       role: "user",
       content: contentToSend,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      imageUrl: localImageUrl
     };
 
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     saveMessages(newMessages);
     setDraft("");
+    setPendingImage(null);
+    setPendingImagePreview("");
     setLoading(true);
     setError(null);
 
@@ -184,6 +255,7 @@ export default function AiChatWidget() {
         },
         body: JSON.stringify({
           message: userMsg.content,
+          image: imagePayload,
           history: historyPayload.slice(0, -1) // Excluding the last userMsg which is already in the main message parameter
         })
       });
@@ -239,6 +311,15 @@ export default function AiChatWidget() {
     setError(null);
   };
 
+  const requestHumanSupport = () => {
+    setOpen(false);
+    window.dispatchEvent(
+      new CustomEvent("myshoes_open_human_chat", {
+        detail: { initialMessage: "Tôi cần gặp nhân viên tư vấn trực tiếp từ trợ lý AI." }
+      })
+    );
+  };
+
   return (
     <div className="fixed bottom-5 right-[88px] z-[70]">
       {open ? (
@@ -259,6 +340,14 @@ export default function AiChatWidget() {
                   {status}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={requestHumanSupport}
+                className="flex h-9 shrink-0 items-center justify-center rounded-full bg-white/10 px-3 text-[11px] font-bold text-white/90 ring-1 ring-white/15 transition hover:bg-white/25 hover:text-white"
+                title="Gặp nhân viên hỗ trợ trực tiếp"
+              >
+                <FaHeadset className="mr-1 h-3 w-3" /> Gặp nhân viên
+              </button>
               {messages.length > 1 ? (
                 <button
                   type="button"
@@ -326,6 +415,11 @@ export default function AiChatWidget() {
                             <GeminiIcon className="h-3.5 w-3.5 text-indigo-500" /> AI Assistant
                           </p>
                         ) : null}
+                        {message.imageUrl ? (
+                           <a href={message.imageUrl} target="_blank" rel="noreferrer">
+                             <img src={message.imageUrl} alt="Ảnh do khách hàng gửi" className="mb-2 max-h-56 w-full rounded-xl object-cover" />
+                           </a>
+                         ) : null}
                         <div
                           className="prose prose-sm max-w-none break-words whitespace-pre-wrap"
                           dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
@@ -380,27 +474,56 @@ export default function AiChatWidget() {
                 ) : null}
               </div>
 
-              {/* Chat Input */}
-              <form onSubmit={handleFormSubmit} className="flex shrink-0 items-center gap-2 border-t border-slate-100 bg-white p-3.5">
-                <div className="min-w-0 flex-1 rounded-full bg-slate-50 px-4 ring-1 ring-transparent transition focus-within:bg-white focus-within:ring-indigo-600/30">
-                  <input
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    maxLength={2000}
-                    disabled={loading}
-                    placeholder="Hỏi trợ lý AI của Myshoes..."
-                    className="h-11 w-full bg-transparent text-[13.5px] text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-50"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={!draft.trim() || loading}
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/10 transition hover:-translate-y-0.5 hover:shadow-lg disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
-                  aria-label="Gửi tin nhắn cho AI"
-                >
-                  <FaPaperPlane className="h-4 w-4" />
-                </button>
-              </form>
+               {/* Image Preview Area */}
+               {pendingImagePreview ? (
+                 <div className="flex shrink-0 items-center gap-3 border-t border-slate-100 bg-white px-4 pt-3">
+                   <img src={pendingImagePreview} alt="Ảnh chuẩn bị gửi" className="h-16 w-16 rounded-xl object-cover ring-1 ring-slate-200" />
+                   <div className="min-w-0 flex-1">
+                     <p className="truncate text-xs font-semibold text-slate-700">{pendingImage?.name}</p>
+                     <p className="mt-1 text-[10px] text-slate-400">Ảnh sẽ được gửi cùng tin nhắn</p>
+                   </div>
+                   <button
+                     type="button"
+                     onClick={() => { setPendingImage(null); setPendingImagePreview(""); }}
+                     className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-500"
+                     aria-label="Bỏ ảnh"
+                   >
+                     <FaXmark />
+                   </button>
+                 </div>
+               ) : null}
+
+               {/* Chat Input */}
+               <form onSubmit={handleFormSubmit} className="flex shrink-0 items-center gap-2 border-t border-slate-100 bg-white p-3.5">
+                 <input ref={imageInputRef} type="file" accept="image/*" onChange={selectImage} className="hidden" />
+                 <button
+                   type="button"
+                   onClick={() => imageInputRef.current?.click()}
+                   disabled={loading}
+                   className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50"
+                   aria-label="Chọn ảnh đính kèm"
+                 >
+                   <FaImage />
+                 </button>
+                 <div className="min-w-0 flex-1 rounded-full bg-slate-50 px-4 ring-1 ring-transparent transition focus-within:bg-white focus-within:ring-indigo-600/30">
+                   <input
+                     value={draft}
+                     onChange={(e) => setDraft(e.target.value)}
+                     maxLength={2000}
+                     disabled={loading}
+                     placeholder="Hỏi trợ lý AI của Myshoes..."
+                     className="h-11 w-full bg-transparent text-[13.5px] text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-50"
+                   />
+                 </div>
+                 <button
+                   type="submit"
+                   disabled={(!draft.trim() && !pendingImage) || loading}
+                   className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/10 transition hover:-translate-y-0.5 hover:shadow-lg disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                   aria-label="Gửi tin nhắn cho AI"
+                 >
+                   <FaPaperPlane className="h-4 w-4" />
+                 </button>
+               </form>
             </>
           )}
         </section>
