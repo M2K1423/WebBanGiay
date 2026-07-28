@@ -11,12 +11,14 @@ import {
   FaStore,
   FaComments,
   FaStar,
+  FaTicket,
 } from "react-icons/fa6";
 
 const MENU = [
   { name: "Dashboard", href: "/admin", icon: FaChartPie },
   { name: "Sản phẩm", href: "/admin/products", icon: FaBoxOpen },
   { name: "Đơn hàng", href: "/admin/orders", icon: FaCartShopping },
+  { name: "Voucher", href: "/admin/coupons", icon: FaTicket },
   { name: "Khách hàng", href: "/admin/users", icon: FaUsers },
   { name: "Tin nhắn", href: "/admin/chat", icon: FaComments },
   { name: "Đánh giá", href: "/admin/reviews", icon: FaStar },

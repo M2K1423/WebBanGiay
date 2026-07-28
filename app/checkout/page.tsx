@@ -31,6 +31,61 @@ export default function CheckoutPage() {
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [stocks, setStocks] = useState<Record<string, number>>({});
 
+  // Coupon / Voucher states
+  const [couponCodeInput, setCouponCodeInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: "percentage" | "fixed";
+    discountValue: number;
+    discountAmount: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  const handleApplyCoupon = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const formattedCode = couponCodeInput.trim().toUpperCase();
+    if (!formattedCode) return;
+
+    setIsApplyingCoupon(true);
+    setCouponError("");
+
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/coupons/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          code: formattedCode,
+          orderTotal: total
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAppliedCoupon(data);
+        setCouponError("");
+      } else {
+        const errData = await res.json();
+        setCouponError(errData.message || "Mã giảm giá không hợp lệ.");
+        setAppliedCoupon(null);
+      }
+    } catch (err) {
+      setCouponError("Không thể kết nối đến máy chủ.");
+      setAppliedCoupon(null);
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setAppliedCoupon(null);
+    setCouponCodeInput("");
+    setCouponError("");
+  };
+
   useEffect(() => {
     const fetchStocks = async () => {
       const stockMap: Record<string, number> = {};
@@ -192,16 +247,17 @@ export default function CheckoutPage() {
 
       const payload = {
         items,
-        total,
-      shippingAddress: {
-        fullName: formData.fullName,
-        phone: formData.phone,
-        email: formData.email,
-        address: formData.address,
-        note: formData.note
-      },
-      paymentMethod: formData.paymentMethod
-    };
+        total: total - (appliedCoupon?.discountAmount ?? 0),
+        shippingAddress: {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address,
+          note: formData.note
+        },
+        paymentMethod: formData.paymentMethod,
+        couponCode: appliedCoupon?.code ?? undefined
+      };
 
     try {
       const auth = getFirebaseAuth();
@@ -550,11 +606,66 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Coupon Code Section */}
+              <div className="border-t border-slate-100 pt-6 mb-6">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Mã giảm giá / Voucher
+                </label>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-2.5">
+                    <div>
+                      <p className="text-xs font-bold text-emerald-800">
+                        Đã áp dụng: <span className="font-mono text-sm">{appliedCoupon.code}</span>
+                      </p>
+                      <p className="text-[11px] text-emerald-600 mt-0.5 font-semibold">
+                        {appliedCoupon.discountType === "percentage" 
+                          ? `Giảm ${appliedCoupon.discountValue}% (Tối đa -${formatPrice(appliedCoupon.discountAmount)})` 
+                          : `Giảm -${formatPrice(appliedCoupon.discountAmount)}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="text-xs font-bold text-rose-600 hover:text-rose-800 transition-colors"
+                    >
+                      Gỡ bỏ
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCodeInput}
+                      onChange={(e) => setCouponCodeInput(e.target.value)}
+                      placeholder="Nhập mã (E.g. WELCOME50...)"
+                      className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#0d3a6b] focus:outline-none uppercase font-mono"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={isApplyingCoupon || !couponCodeInput.trim()}
+                      className="rounded-xl bg-[#0d3a6b] px-4 py-2 text-xs font-bold text-white hover:bg-[#0a2747] transition-all disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+                    >
+                      {isApplyingCoupon ? "..." : "Áp dụng"}
+                    </button>
+                  </div>
+                )}
+                {couponError && (
+                  <p className="mt-2 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-1.5 animate-pulse">
+                    ⚠️ {couponError}
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-3 text-sm border-t border-slate-100 pt-6">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal ({count} {count === 1 ? "item" : "items"})</span>
                   <span className="font-medium text-slate-900">{formatPrice(total)}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>Voucher ({appliedCoupon.code})</span>
+                    <span className="font-bold text-emerald-600">-{formatPrice(appliedCoupon.discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-slate-600">
                   <span>Shipping</span>
                   <span className="font-medium text-[#0d3a6b] font-semibold">Free</span>
@@ -564,7 +675,7 @@ export default function CheckoutPage() {
                   <div className="flex items-end justify-between">
                     <span className="font-semibold text-slate-900 text-base">Total</span>
                     <div className="text-right">
-                      <span className="text-2xl font-semibold text-rose-600">{formatPrice(total)}</span>
+                      <span className="text-2xl font-semibold text-rose-600">{formatPrice(total - (appliedCoupon?.discountAmount ?? 0))}</span>
                     </div>
                   </div>
                 </div>

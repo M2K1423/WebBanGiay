@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FaChevronRight, FaBolt, FaStar } from "react-icons/fa6";
 import { getSaleProducts, getProductImage } from "@/lib/products";
+import FlashSaleTimer from "@/components/sale/FlashSaleTimer";
 
 export const metadata: Metadata = {
   title: "Flash Sale - Genuine Shoes Sale | myshoes.vn",
@@ -50,18 +51,21 @@ export default async function SalePage({
           <FaBolt className="text-[200px]" />
         </div>
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-2xl flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-rose-600 shadow-xl">
-              <FaBolt className="text-3xl" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="max-w-2xl flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-rose-600 shadow-xl">
+                <FaBolt className="text-3xl" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold sm:text-4xl tracking-tight">
+                  FLASH SALE
+                </h1>
+                <p className="text-white/90 mt-1">
+                  Save up to 50%. Shop now!
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold sm:text-4xl tracking-tight">
-                FLASH SALE
-              </h1>
-              <p className="text-white/90 mt-1">
-                Save up to 50%. Shop now!
-              </p>
-            </div>
+            <FlashSaleTimer />
           </div>
         </div>
       </div>
@@ -153,15 +157,41 @@ export default async function SalePage({
                       {product.name}
                     </h3>
                     <div className="mt-3 flex items-end justify-between">
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-base font-semibold text-rose-600">{product.price}</span>
-                          <span className="text-xs text-slate-400 line-through">{product.oldPrice}</span>
+                      <div className="w-full">
+                        <div className="flex items-center gap-1.5 justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base font-semibold text-rose-600">{product.price}</span>
+                            <span className="text-xs text-slate-400 line-through">{product.oldPrice}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-slate-500 font-semibold">
+                            <FaStar className="text-amber-400 shrink-0" />
+                            <span>{product.rating.toFixed(1)}</span>
+                          </div>
                         </div>
-                        <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-                          <FaStar className="text-amber-400" />
-                          {product.rating.toFixed(1)} · {product.sold} sold
-                        </div>
+
+                        {/* Flash Sale Stock Progress Bar */}
+                        {(() => {
+                          const totalQty = (product.sold || 0) + (product.stock || 0);
+                          const soldPercentage = Math.round(((product.sold || 0) / totalQty) * 100) || 50;
+                          return (
+                            <div className="mt-3">
+                              <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+                                <span className={soldPercentage > 80 ? "text-rose-600 animate-pulse flex items-center gap-1" : "text-slate-500"}>
+                                  {soldPercentage > 80 ? "🔥 Sắp cháy hàng" : `Đã bán ${product.sold}`}
+                                </span>
+                                <span>Còn {product.stock} đôi</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${
+                                    soldPercentage > 80 ? "bg-gradient-to-r from-rose-500 to-rose-600 animate-pulse" : "bg-gradient-to-r from-orange-500 to-rose-500"
+                                  }`}
+                                  style={{ width: `${Math.min(soldPercentage, 100)}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
